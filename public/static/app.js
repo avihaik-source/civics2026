@@ -226,7 +226,7 @@
 
     const questionsHTML = filteredQuestions.map((q, idx) => {
       const isAnswered = state.answeredQuestions.includes(q.id);
-      const isExpanded = state.expandedQuestion === q.id;
+      const isExpanded = state.expandedQuestion === '__all__' || state.expandedQuestion === q.id;
       const preview = getQuestionPreview(q.full_text);
       
       return `
