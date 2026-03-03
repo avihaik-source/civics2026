@@ -2201,7 +2201,8 @@ const _questionsState = {
   currentExam: 0,
   searchQuery: '',
   expandedQuestion: null,
-  answeredQuestions: JSON.parse(localStorage.getItem('civics2026_answered_questions') || '[]')
+  answeredQuestions: JSON.parse(localStorage.getItem('civics2026_answered_questions') || '[]'),
+  filterUnit: 0
 };
 
 function _saveQuestionsState() {
@@ -2263,6 +2264,13 @@ function renderQuestionsPage() {
 
   // Filter questions
   let filtered = currentExam.questions;
+  const unitMap = typeof QUESTION_UNIT_MAP !== 'undefined' ? QUESTION_UNIT_MAP : {};
+  if (_questionsState.filterUnit > 0) {
+    filtered = filtered.filter(function(question) {
+      var m = unitMap[question.id];
+      return m && m.indexOf(_questionsState.filterUnit) !== -1;
+    });
+  }
   if (_questionsState.searchQuery.trim()) {
     const q = _questionsState.searchQuery.trim().toLowerCase();
     filtered = filtered.filter(question => 
@@ -2308,6 +2316,7 @@ function renderQuestionsPage() {
             <span style="font-size:12px;color:var(--text-gray)">שאלה ${q.number}</span>
             <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${lenColor}15;color:${lenColor}">${lenLabel} (${q.length} תווים)</span>
             ${isAnswered ? '<span style="font-size:12px;color:#38a169"><i class="fas fa-check"></i> נענתה</span>' : ''}
+            ${unitMap[q.id] ? unitMap[q.id].map(function(uid) { var u = (typeof UNITS_DATA !== 'undefined' ? UNITS_DATA : []).find(function(x){return x.id===uid}); return u ? '<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#ebf8ff;color:#2b6cb0">' + u.icon + ' יח\' ' + uid + '</span>' : ''; }).join(' ') : ''}
           </div>
           ${isExpanded ? 
             `<div class="q-full-text" style="white-space:pre-wrap;line-height:2;margin-top:8px;padding:16px;background:var(--bg-section);border-radius:8px;border:1px solid var(--border-color);font-size:${A11Y.fontSize}%">${_formatQText(q.full_text, _questionsState.searchQuery)}</div>
@@ -2378,8 +2387,19 @@ function renderQuestionsPage() {
       ${_questionsState.searchQuery ? `<button onclick="window.CivicsApp.setQSearch('');document.getElementById('q-search-input').value=''" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-gray)"><i class="fas fa-times"></i></button>` : ''}
     </div>
 
+    <div style="margin-bottom:12px">
+      <select id="q-unit-filter" onchange="window.CivicsApp.setQUnit(parseInt(this.value))" 
+        style="width:100%;padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--card-bg);font-size:13px;cursor:pointer">
+        <option value="0" ${_questionsState.filterUnit === 0 ? 'selected' : ''}>📚 כל היחידות</option>
+        ${(typeof UNITS_DATA !== 'undefined' ? UNITS_DATA : []).filter(function(u){return u.id <= 15}).map(function(u) {
+          var count = currentExam.questions.filter(function(q) { var m = unitMap[q.id]; return m && m.indexOf(u.id) !== -1; }).length;
+          return '<option value=\"' + u.id + '\" ' + (_questionsState.filterUnit === u.id ? 'selected' : '') + '>' + u.icon + ' יח\u0027 ' + u.id + ': ' + u.title + ' (' + count + ')</option>';
+        }).join('')}
+      </select>
+    </div>
+
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <span style="font-size:13px;color:var(--text-gray)">${_questionsState.searchQuery ? `נמצאו ${filtered.length} שאלות` : `${currentExam.questions.length} שאלות במבחן`}</span>
+      <span style="font-size:13px;color:var(--text-gray)">${_questionsState.filterUnit > 0 ? filtered.length + ' שאלות ביחידה' : (_questionsState.searchQuery ? 'נמצאו ' + filtered.length + ' שאלות' : currentExam.questions.length + ' שאלות במבחן')}</span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-sm" onclick="window.CivicsApp.expandAllQ()"><i class="fas fa-expand"></i> פתח הכל</button>
         <button class="btn btn-sm" onclick="window.CivicsApp.collapseAllQ()"><i class="fas fa-compress"></i> כווץ הכל</button>
@@ -3337,8 +3357,9 @@ window.CivicsApp = {
   generateLesson, printLesson, copyLesson,
   toggleHighlight, clearHighlights, resetTeacherPassword,
   // Exam questions API
-  setQExam(idx) { _questionsState.currentExam = idx; _questionsState.expandedQuestion = null; render(); },
+  setQExam(idx) { _questionsState.currentExam = idx; _questionsState.expandedQuestion = null; _questionsState.filterUnit = 0; render(); },
   setQSearch(q) { _questionsState.searchQuery = q; _questionsState.expandedQuestion = null; render(); setTimeout(() => { const el = document.getElementById('q-search-input'); if (el) { el.focus(); el.value = q; } }, 50); },
+  setQUnit(uid) { _questionsState.filterUnit = uid; _questionsState.expandedQuestion = null; render(); },
   toggleQAnswer(id) { const idx = _questionsState.answeredQuestions.indexOf(id); if (idx === -1) _questionsState.answeredQuestions.push(id); else _questionsState.answeredQuestions.splice(idx, 1); _saveQuestionsState(); render(); },
   toggleQExpand(id) { _questionsState.expandedQuestion = _questionsState.expandedQuestion === id ? null : id; render(); },
   expandAllQ() { _questionsState.expandedQuestion = '__all__'; render(); },
