@@ -4,6 +4,7 @@ import { cache } from 'hono/cache'
 
 type Bindings = {
   DB: D1Database;
+  TEACHER_PASSWORD?: string;
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -253,14 +254,62 @@ app.get('/api/sync/:studentId', async (c) => {
   }
 });
 
+// === TEACHER PASSWORD HELPER ===
+async function getTeacherPassword(db: D1Database | null, envPassword?: string): Promise<string> {
+  // Priority: 1) D1 stored password, 2) env variable, 3) default
+  if (db) {
+    try {
+      await ensureTables(db);
+      // Check if teacher_settings table exists and has password
+      await db.prepare(`CREATE TABLE IF NOT EXISTS teacher_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+      const row = await db.prepare(`SELECT value FROM teacher_settings WHERE key = 'password'`).first();
+      if (row && row.value) return String(row.value);
+    } catch (e) { /* table might not exist yet */ }
+  }
+  return envPassword || 'civics2026!';
+}
+
+async function verifyTeacherPassword(c: any): Promise<boolean> {
+  const password = c.req.query('password') || c.req.header('X-Teacher-Password') || '';
+  const db = c.env.DB;
+  const expected = await getTeacherPassword(db, c.env.TEACHER_PASSWORD);
+  return password === expected;
+}
+
 // === TEACHER API ===
+
+// POST /api/teacher/change-password - Change teacher password
+app.post('/api/teacher/change-password', async (c) => {
+  try {
+    const db = c.env.DB;
+    if (!db) return c.json({ ok: false, error: 'No DB binding' }, 500);
+
+    const { currentPassword, newPassword } = await c.req.json();
+    if (!currentPassword || !newPassword) {
+      return c.json({ ok: false, error: 'Missing fields' }, 400);
+    }
+    if (newPassword.length < 4) {
+      return c.json({ ok: false, error: 'Password too short (min 4)' }, 400);
+    }
+
+    const expected = await getTeacherPassword(db, c.env.TEACHER_PASSWORD);
+    if (currentPassword !== expected) {
+      return c.json({ ok: false, error: 'Wrong current password' }, 401);
+    }
+
+    await db.prepare(`CREATE TABLE IF NOT EXISTS teacher_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+    await db.prepare(`INSERT INTO teacher_settings (key, value, updated_at) VALUES ('password', ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=datetime('now')`).bind(newPassword).run();
+
+    return c.json({ ok: true, message: 'Password changed successfully' });
+  } catch (e: any) {
+    return c.json({ ok: false, error: e.message }, 500);
+  }
+});
 
 // GET /api/teacher/students - Get all students with progress
 app.get('/api/teacher/students', async (c) => {
-  const password = c.req.query('password');
-
-  // Simple password check (Phase 4 could use hashed passwords)
-  if (password !== '1234') {
+  const authorized = await verifyTeacherPassword(c);
+  if (!authorized) {
     return c.json({ error: 'Unauthorized', students: [] }, 401);
   }
 
@@ -353,8 +402,8 @@ app.post('/api/analytics', async (c) => {
 
 // GET /api/analytics/summary - Get analytics summary for teacher
 app.get('/api/analytics/summary', async (c) => {
-  const password = c.req.query('password');
-  if (password !== '1234') {
+  const authorized = await verifyTeacherPassword(c);
+  if (!authorized) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
 
@@ -423,8 +472,8 @@ app.get('/api/analytics/summary', async (c) => {
 
 // DELETE /api/student/:id - Delete student and all data
 app.delete('/api/student/:id', async (c) => {
-  const password = c.req.query('password');
-  if (password !== '1234') return c.json({ error: 'Unauthorized' }, 401);
+  const authorized = await verifyTeacherPassword(c);
+  if (!authorized) return c.json({ error: 'Unauthorized' }, 401);
 
   try {
     const db = c.env.DB;

@@ -133,7 +133,7 @@ const STATE = {
   sidebarOpen: false,
   examSim: null,
   teacherAuth: false,
-  teacherPassword: '1234',
+  teacherPassword: null,
   teacherStudents: [],
   teacherLoading: false,
   syncStatus: 'idle',
@@ -2487,7 +2487,7 @@ function renderDashboard() {
           <i class="fas fa-sign-in-alt"></i> כניסה
         </button>
         <div class="error-msg" id="pass-error" role="alert">סיסמה שגויה</div>
-        <p style="font-size:12px;color:var(--text-gray);margin-top:14px">ברירת מחדל: 1234</p>
+        <p style="font-size:12px;color:var(--text-gray);margin-top:14px">הסיסמה נקבעת ע"י מנהל המערכת</p>
       </div>
     </div>`;
   }
@@ -2958,22 +2958,47 @@ function esc(s) {
 // ===== TEACHER FUNCTIONS =====
 function checkTeacherPass() {
   const input = document.getElementById('teacher-pass');
-  if (input && input.value === STATE.teacherPassword) {
-    STATE.teacherAuth = true;
-    loadTeacherData();
-    render();
-  } else {
-    const err = document.getElementById('pass-error');
-    if (err) err.style.display = 'block';
-    if (input) { input.value = ''; input.focus(); }
-  }
+  if (!input || !input.value) return;
+  const pass = input.value;
+  // Verify against server
+  fetch('/api/teacher/students?password=' + encodeURIComponent(pass))
+  .then(function(r) {
+    if (r.ok) {
+      STATE.teacherPassword = pass;
+      STATE.teacherAuth = true;
+      try { localStorage.setItem('civics2026_teacher_pass', pass); } catch(e) {}
+      return r.json().then(function(data) {
+        STATE.teacherStudents = data.students || [];
+        STATE.teacherLoading = false;
+        render();
+      });
+    } else {
+      var err = document.getElementById('pass-error');
+      if (err) err.style.display = 'block';
+      if (input) { input.value = ''; input.focus(); }
+    }
+  })
+  .catch(function() {
+    // Offline fallback — try localStorage password
+    var saved = null;
+    try { saved = localStorage.getItem('civics2026_teacher_pass'); } catch(e) {}
+    if (saved && pass === saved) {
+      STATE.teacherPassword = pass;
+      STATE.teacherAuth = true;
+      render();
+    } else {
+      var err = document.getElementById('pass-error');
+      if (err) err.style.display = 'block';
+      if (input) { input.value = ''; input.focus(); }
+    }
+  });
 }
 
 function loadTeacherData() {
   STATE.teacherLoading = true;
   render();
-  
-  fetch('/api/teacher/students?password=' + STATE.teacherPassword)
+  if (!STATE.teacherPassword) return;
+  fetch('/api/teacher/students?password=' + encodeURIComponent(STATE.teacherPassword))
   .then(r => r.json())
   .then(data => {
     STATE.teacherStudents = data.students || [];
@@ -3259,8 +3284,8 @@ function resetTeacherPassword() {
     if (err) { err.textContent = 'נא למלא את כל השדות'; err.style.display = 'block'; }
     return;
   }
-  if (cur.value !== STATE.teacherPassword) {
-    if (err) { err.textContent = 'הסיסמה הנוכחית שגויה'; err.style.display = 'block'; }
+  if (!cur.value || !newP.value || !conf.value) {
+    if (err) { err.textContent = 'נא למלא את כל השדות'; err.style.display = 'block'; }
     return;
   }
   if (newP.value.length < 4) {
@@ -3271,12 +3296,28 @@ function resetTeacherPassword() {
     if (err) { err.textContent = 'הסיסמאות אינן תואמות'; err.style.display = 'block'; }
     return;
   }
-  STATE.teacherPassword = newP.value;
-  try { localStorage.setItem('civics2026_teacher_pass', newP.value); } catch(e) {}
-  if (err) err.style.display = 'none';
-  announceToSR('הסיסמה שונתה בהצלחה');
-  const ok = document.getElementById('reset-success');
-  if (ok) { ok.style.display = 'block'; setTimeout(() => ok.style.display = 'none', 3000); }
+  // Change password via server
+  fetch('/api/teacher/change-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ currentPassword: cur.value, newPassword: newP.value })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      STATE.teacherPassword = newP.value;
+      try { localStorage.setItem('civics2026_teacher_pass', newP.value); } catch(e) {}
+      if (err) err.style.display = 'none';
+      announceToSR('הסיסמה שונתה בהצלחה');
+      var ok = document.getElementById('reset-success');
+      if (ok) { ok.style.display = 'block'; setTimeout(function() { ok.style.display = 'none'; }, 3000); }
+    } else {
+      if (err) { err.textContent = data.error === 'Wrong current password' ? 'הסיסמה הנוכחית שגויה' : (data.error || 'שגיאה'); err.style.display = 'block'; }
+    }
+  })
+  .catch(function() {
+    if (err) { err.textContent = 'שגיאת חיבור לשרת'; err.style.display = 'block'; }
+  });
 }
 
 // ===== PUBLIC API =====
