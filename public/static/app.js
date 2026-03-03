@@ -26,6 +26,7 @@ const A11Y = {
   ttsEnabled: false,      // text-to-speech
   chunkSize: 5,           // concepts per page (7±2 rule)
   chunkPage: {},          // unitId -> current chunk page
+  studyMatPage: {},       // unitId -> current study material page
   scaffoldLevel: 'original', // original, simplified, template, settings
   scaffoldDefault: 'original', // default scaffold level
   minimalMode: false, // sensory overload protection
@@ -1587,6 +1588,43 @@ function renderLearnTab(unit) {
     }
   }
 
+  // Study Materials from source documents (mikud, ometz, hidud)
+  if (typeof STUDY_MATERIALS !== 'undefined' && STUDY_MATERIALS[unit.id] && STUDY_MATERIALS[unit.id].paragraphs.length > 0) {
+    var sm = STUDY_MATERIALS[unit.id];
+    var smChunkSize = 8;
+    var smPage = A11Y.studyMatPage && A11Y.studyMatPage[unit.id] || 0;
+    var smTotal = Math.ceil(sm.paragraphs.length / smChunkSize);
+    var smStart = smPage * smChunkSize;
+    var smItems = sm.paragraphs.slice(smStart, smStart + smChunkSize);
+    
+    html += '<div class="content-section" role="region" aria-label="חומר מיקוד">';
+    html += '<h2><i class="fas fa-file-alt"></i> חומר מיקוד לבגרות</h2>';
+    html += '<p style="color:var(--text-gray);font-size:13px;margin-bottom:12px">מקור: מיקוד בגרות 2026, חוברת אומץ, הנחיות משרד החינוך</p>';
+    html += '<div class="chunk-info" role="status">מציג ' + (smStart+1) + '-' + Math.min(smStart+smChunkSize, sm.paragraphs.length) + ' מתוך ' + sm.paragraphs.length + ' פסקאות</div>';
+    
+    smItems.forEach(function(para) {
+      var isHeader = para.length < 60 && !para.startsWith('-') && !para.startsWith('*');
+      if (isHeader) {
+        html += '<h3 style="color:#0038b8;font-size:16px;margin:16px 0 8px 0;font-weight:bold;border-bottom:2px solid #e2e8f0;padding-bottom:4px">' + para + '</h3>';
+      } else {
+        html += '<div class="definition-box highlightable" style="padding:12px 16px;margin-bottom:8px;line-height:1.9;font-size:' + A11Y.fontSize + '%">' + para + '</div>';
+      }
+    });
+    
+    if (smTotal > 1) {
+      html += '<div class="chunk-pagination" role="navigation" aria-label="עמודי חומר מיקוד">';
+      if (smPage > 0) {
+        html += '<button class="btn btn-sm btn-primary" onclick="window.CivicsApp.setStudyMatPage(' + unit.id + ',' + (smPage-1) + ')"><i class="fas fa-arrow-right"></i> הקודם</button>';
+      }
+      html += '<span class="chunk-page-info">עמוד ' + (smPage+1) + ' מתוך ' + smTotal + '</span>';
+      if (smPage < smTotal - 1) {
+        html += '<button class="btn btn-sm btn-primary" onclick="window.CivicsApp.setStudyMatPage(' + unit.id + ',' + (smPage+1) + ')">הבא <i class="fas fa-arrow-left"></i></button>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
   return html;
 }
 
@@ -1596,6 +1634,14 @@ function setChunkPage(unitId, page) {
   // Scroll to top of content
   const section = document.querySelector('.content-section');
   if (section) section.scrollIntoView({ behavior: 'smooth' });
+}
+
+function setStudyMatPage(unitId, page) {
+  if (!A11Y.studyMatPage) A11Y.studyMatPage = {};
+  A11Y.studyMatPage[unitId] = page;
+  render();
+  var el = document.querySelector('[aria-label="חומר מיקוד"]');
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
 function getExamplesForUnit(id) {
@@ -3348,7 +3394,7 @@ window.CivicsApp = {
   loadTeacherData, showStudentDetail, closeStudentDetail, exportAllData,
   exportStudentData, togglePause, setTheme, setFontSize, setFontType,
   toggleQuietMode, toggleHideTimers, toggleReducedMotion, toggleA11yPanel,
-  startBreathing, stopBreathing, setChunkPage, toggleTTS, speakText,
+  startBreathing, stopBreathing, setChunkPage, setStudyMatPage, toggleTTS, speakText,
   stopTTS, setScaffoldLevel, setScaffoldDefault, saveNote, resetAllData, setDailyGoal,
   showPositiveFeedback, onScaffoldCheck, announceToSR,
   toggleMinimalMode, saveTemplateFill, copyTemplateToAnswer,
