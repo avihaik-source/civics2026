@@ -124,6 +124,7 @@ const STATE = {
   currentTab: 'learn',
   studentId: '',
   studentName: '',
+  studentGrade: '',
   progress: {},    // unitId -> { checklist: [], answers: {}, mood: '', completed: false }
   timerActive: false,
   timerPhase: 0,
@@ -621,6 +622,7 @@ function loadState() {
     if (saved) {
       const d = JSON.parse(saved);
       STATE.studentName = d.studentName || '';
+      STATE.studentGrade = d.studentGrade || '';
       STATE.progress = d.progress || {};
     }
   } catch(e) {}
@@ -630,6 +632,7 @@ function saveState() {
   try {
     localStorage.setItem('civics2026', JSON.stringify({
       studentName: STATE.studentName,
+      studentGrade: STATE.studentGrade,
       progress: STATE.progress
     }));
     showSave(true);
@@ -658,6 +661,7 @@ function syncToServer() {
     body: JSON.stringify({
       studentId: STATE.studentId,
       studentName: STATE.studentName,
+      studentGrade: STATE.studentGrade,
       progress: STATE.progress,
       notes: NOTES
     })
@@ -992,6 +996,22 @@ function navigate(page, unitId) {
 // ===== RENDER =====
 function render() {
   const app = document.getElementById('app');
+
+  // Dynamic page titles
+  const titleMap = {
+    'home': 'אזרחות 2026 - דף הבית',
+    'unit': () => {
+      const u = UNITS_DATA.find(x => x.id === STATE.currentUnit);
+      return u ? `אזרחות 2026 - יחידה ${u.id}: ${u.title}` : 'אזרחות 2026 - יחידה';
+    },
+    'questions': 'אזרחות 2026 - שאלות בגרות',
+    'exam-sim': 'אזרחות 2026 - סימולציית בחינה',
+    'dashboard': 'אזרחות 2026 - דשבורד מורה',
+    'breathing': 'אזרחות 2026 - תרגיל נשימה'
+  };
+  const titleVal = titleMap[STATE.currentPage];
+  document.title = typeof titleVal === 'function' ? titleVal() : (titleVal || 'אזרחות 2026');
+
   if (A11Y.paused) {
     app.innerHTML = renderCalmScreen();
     return;
@@ -1280,6 +1300,13 @@ function renderTopBar() {
       <label class="sr-only" for="student-name-input">שם התלמיד/ה</label>
       <input type="text" id="student-name-input" class="student-name-input" placeholder="שם התלמיד/ה" value="${esc(STATE.studentName)}"
         onchange="window.CivicsApp.setName(this.value)" aria-label="שם התלמיד/ה">
+      <select id="student-grade-select" class="student-grade-select" onchange="window.CivicsApp.setGrade(this.value)" aria-label="כיתה">
+        <option value=""${!STATE.studentGrade ? ' selected' : ''}>כיתה...</option>
+        <option value="10"${STATE.studentGrade === '10' ? ' selected' : ''}>י׳</option>
+        <option value="11"${STATE.studentGrade === '11' ? ' selected' : ''}>יא׳</option>
+        <option value="12"${STATE.studentGrade === '12' ? ' selected' : ''}>יב׳</option>
+        <option value="other"${STATE.studentGrade === 'other' ? ' selected' : ''}>אחר</option>
+      </select>
       <span id="save-badge" class="save-badge" style="opacity:0.4" role="status" aria-live="polite">✓ נשמר</span>
       <span id="sync-badge" class="sync-badge" role="status" aria-live="polite"></span>
       <button class="btn btn-sm" style="background:var(--btn-export-bg, #e8f5e9);color:var(--btn-export-color, #2e7d32)" onclick="window.CivicsApp.exportData()" title="שמור גיבוי" aria-label="ייצוא נתונים"><i class="fas fa-download"></i></button>
@@ -1383,6 +1410,33 @@ function renderHomePage() {
     });
     html += `</div>`;
   });
+
+  // Credits section
+  html += `
+    <div class="credits-section" role="contentinfo" aria-label="קרדיטים ומקורות">
+      <h3><i class="fas fa-book-open"></i> מקורות התכנים</h3>
+      <div class="credits-grid">
+        <div class="credits-item">
+          <strong>📋 שאלות בגרות אמיתיות:</strong>
+          <span>משרד החינוך - לשכת הבחינות</span>
+          <small>(חורף 2024, קיץ 2024, חורף 2025, קיץ 2025, חורף 2026)</small>
+        </div>
+        <div class="credits-item">
+          <strong>📖 חומר תיאורטי:</strong>
+          <span>חוברת "אומץ" - הכנה לבגרות באזרחות תשפ״ו</span>
+        </div>
+        <div class="credits-item">
+          <strong>🎯 מיקוד לבגרות:</strong>
+          <span>משרד החינוך - מדור אזרחות (תשפ״ה-תשפ״ו)</span>
+        </div>
+      </div>
+      <div class="credits-footer">
+        <p><strong>פיתוח ויזום:</strong> אביחי ק. | פרויקט ללא מטרות רווח</p>
+        <p class="credits-purpose">מטרה: הנגשת חומרי לימוד לתלמידי תיכון, במיוחד תלמידים בספקטרום האוטיסטי</p>
+        <p class="credits-legal">כל הזכויות במקורות שייכות לבעליהן. שימוש בתכנים למטרות לימוד בלבד.</p>
+      </div>
+    </div>`;
+
   html += `</div>`;
   return html;
 }
@@ -2712,6 +2766,12 @@ function setName(name) {
   debouncedSync();
 }
 
+function setGrade(grade) {
+  STATE.studentGrade = grade;
+  saveState();
+  debouncedSync();
+}
+
 function saveAnswer(unitId, qId, val) {
   const p = getProgress(unitId);
   p.answers[qId] = val;
@@ -3031,7 +3091,7 @@ function announceToSR(msg) {
 
 // ===== PUBLIC API =====
 window.CivicsApp = {
-  toggleSidebar, startTimer, stopTimer, setTab, setName, saveAnswer,
+  toggleSidebar, startTimer, stopTimer, setTab, setName, setGrade, saveAnswer,
   toggleCheck, setMood, toggleEl, toggleRecord, startExamSim,
   nextExamPhase, stopExamSim, exportData, importData, checkTeacherPass,
   loadTeacherData, showStudentDetail, closeStudentDetail, exportAllData,

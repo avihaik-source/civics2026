@@ -36,4 +36,53 @@ app.get('/api/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// ===== SYNC API (localStorage bridge - Phase 4 will add D1 database) =====
+// In-memory store for the current worker instance
+// Note: Cloudflare Workers are stateless; data persists only within a single request.
+// For Phase 1, this prevents 404 errors. Full D1 persistence comes in Phase 4.
+
+app.post('/api/sync', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { studentId, studentName, progress, notes } = body
+    if (!studentId) {
+      return c.json({ ok: false, error: 'Missing studentId' }, 400)
+    }
+    // Acknowledge sync - data is saved client-side in localStorage
+    // Phase 4 will persist to Cloudflare D1
+    return c.json({ 
+      ok: true, 
+      message: 'Sync acknowledged (localStorage mode)',
+      studentId,
+      timestamp: new Date().toISOString()
+    })
+  } catch (e) {
+    return c.json({ ok: false, error: 'Invalid request body' }, 400)
+  }
+})
+
+app.get('/api/sync/:studentId', (c) => {
+  const studentId = c.req.param('studentId')
+  // Phase 4 will fetch from D1. For now, report no server data.
+  return c.json({ 
+    found: false, 
+    data: null,
+    message: 'Server storage not yet available (Phase 4). Using localStorage.'
+  })
+})
+
+// ===== TEACHER API =====
+app.get('/api/teacher/students', (c) => {
+  const password = c.req.query('password')
+  // Phase 4 will validate against stored hash and return real student data
+  if (password !== '1234') {
+    return c.json({ error: 'Unauthorized', students: [] }, 401)
+  }
+  return c.json({ 
+    students: [],
+    message: 'Teacher dashboard active. Student sync requires Phase 4 (D1 database).',
+    timestamp: new Date().toISOString()
+  })
+})
+
 export default app
