@@ -5,13 +5,5 @@
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
     "nodejs_compat"
-  ],
-  // D1 will be added after creating database with proper permissions
-  // "d1_databases": [
-  //   {
-  //     "binding": "DB",
-  //     "database_name": "civics2026-production",
-  //     "database_id": "YOUR_DB_ID_HERE"
-  //   }
-  // ]
+  ]
 }
