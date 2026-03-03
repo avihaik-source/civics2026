@@ -1,9 +1,33 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { cache } from 'hono/cache'
 
 const app = new Hono()
 
 app.use('/api/*', cors())
+
+// Cache static assets for 1 day
+app.use('/static/*', cache({
+  cacheName: 'civics2026-static',
+  cacheControl: 'public, max-age=86400, s-maxage=604800',
+}))
+
+// Service Worker - must be served from root for scope
+app.get('/sw.js', async (c) => {
+  const swCode = `// Civics2026 Service Worker - Offline Support
+const CACHE_NAME='civics2026-v2';
+const STATIC_ASSETS=['/','/static/app.js','/static/data.js','/static/questions-data.js','/static/scaffolding.js','/static/styles.css'];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(STATIC_ASSETS)).then(()=>self.skipWaiting()))});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE_NAME).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(u.pathname.startsWith('/api/')){e.respondWith(fetch(e.request).catch(()=>new Response(JSON.stringify({ok:false,offline:true,message:'אתם במצב לא מקוון'}),{headers:{'Content-Type':'application/json'}})));return}e.respondWith(caches.match(e.request).then(c=>{if(c){fetch(e.request).then(r=>{if(r.ok)caches.open(CACHE_NAME).then(ca=>ca.put(e.request,r))}).catch(()=>{});return c}return fetch(e.request).then(r=>{if(r.ok&&u.origin===self.location.origin){const cl=r.clone();caches.open(CACHE_NAME).then(ca=>ca.put(e.request,cl))}return r})}))});`;
+  return new Response(swCode, {
+    headers: {
+      'Content-Type': 'application/javascript',
+      'Cache-Control': 'no-cache',
+      'Service-Worker-Allowed': '/',
+    }
+  });
+})
 
 app.get('/', (c) => {
   return c.html(`<!DOCTYPE html>
@@ -18,16 +42,21 @@ app.get('/', (c) => {
 <meta property="og:type" content="website">
 <meta property="og:locale" content="he_IL">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" href="/static/styles.css" as="style">
+<link rel="preload" href="/static/app.js" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&family=David+Libre:wght@400;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
 <link href="/static/styles.css" rel="stylesheet">
 </head>
 <body>
-<div id="app"></div>
-<script src="/static/data.js"></script>
-<script src="/static/scaffolding.js"></script>
-<script src="/static/questions-data.js"></script>
-<script src="/static/app.js"></script>
+<div id="app"><div style="display:flex;justify-content:center;align-items:center;height:100vh;direction:rtl;font-family:Assistant,sans-serif"><div style="text-align:center"><div style="font-size:48px;margin-bottom:16px">🎓</div><div style="font-size:20px;color:#0038b8;font-weight:700">טוען את אזרחות 2026...</div></div></div></div>
+<script src="/static/data.js" defer></script>
+<script src="/static/scaffolding.js" defer></script>
+<script src="/static/questions-data.js" defer></script>
+<script src="/static/app.js" defer></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script>
 </body>
 </html>`)
 })
