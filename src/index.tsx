@@ -50,6 +50,8 @@ app.get('/', (c) => {
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdn.tailwindcss.com">
 <link rel="preload" href="/static/styles.css" as="style">
 <link rel="preload" href="/static/app.js" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&family=David+Libre:wght@400;700&display=swap" rel="stylesheet">
@@ -60,10 +62,15 @@ app.get('/', (c) => {
 <div id="app"><div style="display:flex;justify-content:center;align-items:center;height:100vh;direction:rtl;font-family:Assistant,sans-serif"><div style="text-align:center"><div style="font-size:48px;margin-bottom:16px">🎓</div><div style="font-size:20px;color:#0038b8;font-weight:700">טוען את אזרחות 2026...</div></div></div></div>
 <script src="/static/data.js" defer></script>
 <script src="/static/scaffolding.js" defer></script>
-<script src="/static/questions-data.js" defer></script>
-<script src="/static/study-materials.js" defer></script>
 <script src="/static/app.js" defer></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script>
+<script>
+// Lazy-load large data files after main app loads
+window.addEventListener('load',function(){
+  var files=['/static/questions-data.js','/static/study-materials.js'];
+  files.forEach(function(src){var s=document.createElement('script');s.src=src;s.async=true;document.body.appendChild(s)});
+});
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}
+</script>
 </body>
 </html>`)
 })
