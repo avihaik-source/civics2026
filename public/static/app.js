@@ -956,6 +956,11 @@ function onHashChange() {
     STATE.currentPage = 'unit';
     STATE.currentUnit = id;
     STATE.currentTab = 'learn';
+  } else if (hash.startsWith('practice/')) {
+    STATE.currentPage = 'practice';
+    STATE._practiceParam = hash.split('/')[1];
+  } else if (hash === 'question-list') {
+    STATE.currentPage = 'question-list';
   } else if (hash === 'questions') {
     STATE.currentPage = 'questions';
   } else if (hash === 'dashboard') {
@@ -965,13 +970,23 @@ function onHashChange() {
   } else if (hash === 'breathing') {
     STATE.currentPage = 'breathing';
     startBreathing();
+  } else if (hash === 'timeline') {
+    STATE.currentPage = 'timeline';
+  } else if (hash === 'acronyms') {
+    STATE.currentPage = 'acronyms';
+  } else if (hash === 'tips') {
+    STATE.currentPage = 'tips';
+  } else if (hash === 'about') {
+    STATE.currentPage = 'about';
+  } else if (hash === 'student-progress') {
+    STATE.currentPage = 'student-progress';
   } else {
     STATE.currentPage = 'home';
     STATE.currentUnit = null;
   }
   // Transition announcement for accessibility
   if (prevPage !== STATE.currentPage) {
-    const pageNames = {home: 'דף הבית', unit: 'יחידת לימוד', questions: 'שאלות בגרות', dashboard: 'לוח מחוונים', 'exam-sim': 'סימולציית בחינה', breathing: 'תרגיל נשימה'};
+    const pageNames = {home: 'דף הבית', unit: 'יחידת לימוד', questions: 'שאלות בגרות', dashboard: 'לוח מחוונים', 'exam-sim': 'סימולציית בחינה', breathing: 'תרגיל נשימה', practice: 'תרגול שאלה', 'question-list': 'רשימת שאלות לתרגול', timeline: 'ציר זמן', acronyms: 'ראשי תיבות', tips: 'כללי הזהב', about: 'אודות', 'student-progress': 'ההתקדמות שלי'};
     announceToSR('עוברים ל' + (pageNames[STATE.currentPage] || STATE.currentPage));
   }
   // Track study time for break reminders
@@ -991,6 +1006,13 @@ function navigate(page, unitId) {
   else if (page === 'questions') location.hash = 'questions';
   else if (page === 'exam-sim') location.hash = 'exam-sim';
   else if (page === 'breathing') location.hash = 'breathing';
+  else if (page === 'practice') location.hash = 'practice/' + (unitId || '');
+  else if (page === 'question-list') location.hash = 'question-list';
+  else if (page === 'timeline') location.hash = 'timeline';
+  else if (page === 'acronyms') location.hash = 'acronyms';
+  else if (page === 'tips') location.hash = 'tips';
+  else if (page === 'about') location.hash = 'about';
+  else if (page === 'student-progress') location.hash = 'student-progress';
   else location.hash = '';
 }
 
@@ -1008,7 +1030,14 @@ function render() {
     'questions': 'אזרחות 2026 - שאלות בגרות',
     'exam-sim': 'אזרחות 2026 - סימולציית בחינה',
     'dashboard': 'אזרחות 2026 - דשבורד מורה',
-    'breathing': 'אזרחות 2026 - תרגיל נשימה'
+    'breathing': 'אזרחות 2026 - תרגיל נשימה',
+    'practice': 'אזרחות 2026 - תרגול שאלה',
+    'question-list': 'אזרחות 2026 - 96 שאלות לתרגול',
+    'timeline': 'אזרחות 2026 - ציר זמן 1897-1948',
+    'acronyms': 'אזרחות 2026 - ראשי תיבות',
+    'tips': 'אזרחות 2026 - 7 כללי הזהב',
+    'about': 'אזרחות 2026 - אודות',
+    'student-progress': 'אזרחות 2026 - ההתקדמות שלי'
   };
   const titleVal = titleMap[STATE.currentPage];
   document.title = typeof titleVal === 'function' ? titleVal() : (titleVal || 'אזרחות 2026');
@@ -1040,7 +1069,8 @@ function renderLayout() {
           STATE.currentPage === 'unit' ? renderUnitPage() :
           STATE.currentPage === 'questions' ? renderQuestionsPage() :
           STATE.currentPage === 'dashboard' ? renderDashboard() :
-          STATE.currentPage === 'exam-sim' ? renderExamSim() : ''}
+          STATE.currentPage === 'exam-sim' ? renderExamSim() :
+          (window.CivicsFeatures && window.CivicsFeatures.getPageRenderer(STATE.currentPage, STATE._practiceParam)) || ''}
       </main>
     </div>
     ${renderA11yPanel()}`;
@@ -1256,11 +1286,29 @@ function renderSidebar() {
       <a class="sidebar-item${STATE.currentPage==='questions'?' active':''}" href="#questions" tabindex="0" aria-label="96 שאלות בגרות" aria-current="${STATE.currentPage==='questions'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-file-alt"></i></span> שאלות בגרות (96)
       </a>
+      <a class="sidebar-item${STATE.currentPage==='question-list'||STATE.currentPage==='practice'?' active':''}" href="#question-list" tabindex="0" aria-label="96 שאלות תרגול" aria-current="${STATE.currentPage==='question-list'||STATE.currentPage==='practice'?'page':'false'}">
+        <span class="item-icon"><i class="fas fa-pen-fancy"></i></span> תרגול שאלות (96)
+      </a>
       <a class="sidebar-item${STATE.currentPage==='exam-sim'?' active':''}" href="#exam-sim" tabindex="0" aria-label="סימולציית בחינה" aria-current="${STATE.currentPage==='exam-sim'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-stopwatch"></i></span> סימולציית בחינה
       </a>
+      <a class="sidebar-item${STATE.currentPage==='timeline'?' active':''}" href="#timeline" tabindex="0" aria-label="ציר זמן" aria-current="${STATE.currentPage==='timeline'?'page':'false'}">
+        <span class="item-icon"><i class="fas fa-history"></i></span> ציר זמן
+      </a>
+      <a class="sidebar-item${STATE.currentPage==='acronyms'?' active':''}" href="#acronyms" tabindex="0" aria-label="ראשי תיבות" aria-current="${STATE.currentPage==='acronyms'?'page':'false'}">
+        <span class="item-icon"><i class="fas fa-book"></i></span> ראשי תיבות
+      </a>
+      <a class="sidebar-item${STATE.currentPage==='tips'?' active':''}" href="#tips" tabindex="0" aria-label="כללי הזהב" aria-current="${STATE.currentPage==='tips'?'page':'false'}">
+        <span class="item-icon"><i class="fas fa-lightbulb"></i></span> 7 כללי הזהב
+      </a>
+      <a class="sidebar-item${STATE.currentPage==='student-progress'?' active':''}" href="#student-progress" tabindex="0" aria-label="ההתקדמות שלי" aria-current="${STATE.currentPage==='student-progress'?'page':'false'}">
+        <span class="item-icon"><i class="fas fa-chart-pie"></i></span> ההתקדמות שלי
+      </a>
       <a class="sidebar-item" href="#breathing" tabindex="0" aria-label="תרגיל נשימה">
         <span class="item-icon"><i class="fas fa-wind"></i></span> תרגיל נשימה
+      </a>
+      <a class="sidebar-item${STATE.currentPage==='about'?' active':''}" href="#about" tabindex="0" aria-label="אודות" aria-current="${STATE.currentPage==='about'?'page':'false'}">
+        <span class="item-icon"><i class="fas fa-info-circle"></i></span> אודות
       </a>
       <a class="sidebar-item${STATE.currentPage==='dashboard'?' active':''}" href="#dashboard" tabindex="0" aria-label="דשבורד מורה" aria-current="${STATE.currentPage==='dashboard'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-chart-bar"></i></span> דשבורד מורה
@@ -1333,6 +1381,40 @@ function renderHomePage() {
       <h1>🎓 מערכת הכנה לבגרות באזרחות 2026</h1>
       <p>16 יחידות לימוד | ${EXAM_QUESTIONS.length} שאלות תרגול | 96 שאלות בגרות אמיתיות | הכנה לבחינה בעל-פה</p>
       <p class="hero-a11y-note"><i class="fas fa-universal-access"></i> גרסה מותאמת נגישות</p>
+    </div>
+
+    <!-- Quick Links to New Features -->
+    <div class="home-quick-links" role="navigation" aria-label="קישורים מהירים">
+      <a href="#question-list" class="quick-link-card" aria-label="96 שאלות תרגול">
+        <span class="ql-icon">✍️</span>
+        <span class="ql-title">96 שאלות תרגול</span>
+        <span class="ql-desc">תרגול עם רמז ותשובה</span>
+      </a>
+      <a href="#timeline" class="quick-link-card" aria-label="ציר זמן">
+        <span class="ql-icon">🕐</span>
+        <span class="ql-title">ציר זמן</span>
+        <span class="ql-desc">1897-1948</span>
+      </a>
+      <a href="#acronyms" class="quick-link-card" aria-label="ראשי תיבות">
+        <span class="ql-icon">📖</span>
+        <span class="ql-title">ראשי תיבות</span>
+        <span class="ql-desc">הקב״ט, חד״ם...</span>
+      </a>
+      <a href="#tips" class="quick-link-card" aria-label="כללי הזהב">
+        <span class="ql-icon">💡</span>
+        <span class="ql-title">7 כללי הזהב</span>
+        <span class="ql-desc">טיפים ללמידה</span>
+      </a>
+      <a href="#student-progress" class="quick-link-card" aria-label="ההתקדמות שלי">
+        <span class="ql-icon">📊</span>
+        <span class="ql-title">ההתקדמות שלי</span>
+        <span class="ql-desc">סטטיסטיקות</span>
+      </a>
+      <a href="#about" class="quick-link-card" aria-label="אודות">
+        <span class="ql-icon">ℹ️</span>
+        <span class="ql-title">אודות</span>
+        <span class="ql-desc">מידע על המערכת</span>
+      </a>
     </div>
     
     ${renderFirstThen()}
@@ -3387,6 +3469,7 @@ function resetTeacherPassword() {
 }
 
 // ===== PUBLIC API =====
+window._civicsRender = render;
 window.CivicsApp = {
   toggleSidebar, startTimer, stopTimer, setTab, setName, setGrade, saveAnswer,
   toggleCheck, setMood, toggleEl, toggleRecord, startExamSim,
