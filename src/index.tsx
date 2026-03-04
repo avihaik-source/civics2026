@@ -20,8 +20,8 @@ app.use('/static/*', cache({
 // Service Worker - must be served from root for scope
 app.get('/sw.js', async (c) => {
   const swCode = `// Civics2026 Service Worker - Offline Support
-const CACHE_NAME='civics2026-v4';
-const STATIC_ASSETS=['/','/static/app.js','/static/data.js','/static/questions-data.js','/static/scaffolding.js','/static/study-materials.js','/static/features.js','/static/styles.css'];
+const CACHE_NAME='civics2026-v5';
+const STATIC_ASSETS=['/','/static/app.js','/static/data.js','/static/questions-data.js','/static/scaffolding.js','/static/study-materials.js','/static/features.js','/static/styles.css','/static/exam-questions-official.json'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(STATIC_ASSETS)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE_NAME).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(u.pathname.startsWith('/api/')){e.respondWith(fetch(e.request).catch(()=>new Response(JSON.stringify({ok:false,offline:true,message:'אתם במצב לא מקוון'}),{headers:{'Content-Type':'application/json'}})));return}e.respondWith(caches.match(e.request).then(c=>{if(c){fetch(e.request).then(r=>{if(r.ok)caches.open(CACHE_NAME).then(ca=>ca.put(e.request,r))}).catch(()=>{});return c}return fetch(e.request).then(r=>{if(r.ok&&u.origin===self.location.origin){const cl=r.clone();caches.open(CACHE_NAME).then(ca=>ca.put(e.request,cl))}return r})}))});`;
@@ -78,7 +78,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catc
 
 // === HEALTH CHECK ===
 app.get('/api/health', (c) => {
-  return c.json({ status: 'ok', version: 'phase4', timestamp: new Date().toISOString() })
+  return c.json({ status: 'ok', version: 'phase6-qa', timestamp: new Date().toISOString() })
 })
 
 // === HELPER: Ensure tables exist (for first request on fresh D1) ===

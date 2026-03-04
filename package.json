@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run minify:dist",
-    "minify:dist": "npx terser dist/static/app.js -c -m -o dist/static/app.js && npx terser dist/static/scaffolding.js -c -m -o dist/static/scaffolding.js && npx terser dist/static/study-materials.js -c -m -o dist/static/study-materials.js && npx cleancss -o dist/static/styles.css dist/static/styles.css",
+    "minify:dist": "npx terser dist/static/app.js -c -m -o dist/static/app.js && npx terser dist/static/features.js -c -m -o dist/static/features.js && npx terser dist/static/scaffolding.js -c -m -o dist/static/scaffolding.js && npx terser dist/static/study-materials.js -c -m -o dist/static/study-materials.js && npx cleancss -o dist/static/styles.css dist/static/styles.css",
     "preview": "wrangler pages dev dist",
     "deploy": "npm run build && wrangler pages deploy dist --project-name civics2026",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",

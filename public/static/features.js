@@ -183,7 +183,7 @@ function renderQuestionPractice(questionId) {
 
       <!-- Question Text -->
       <section class="practice-question-section" aria-labelledby="pq-heading">
-        <h2 id="pq-heading" class="practice-question-text" id="pq-text">${_escHtmlF(q.originalQuestion).replace(/\n/g, '<br>')}</h2>
+        <h2 id="pq-heading" class="practice-question-text">${_escHtmlF(q.originalQuestion).replace(/\n/g, '<br>')}</h2>
       </section>
 
       <!-- TTS Controls -->
@@ -661,7 +661,7 @@ function ratePractice(qId, rating) {
     btn.classList.toggle('active', btn.getAttribute('data-rating') === rating);
   });
   
-  if (typeof announceToSR === 'function') announceToSR('תודה על המשוב!');
+  if (window.CivicsApp && window.CivicsApp.announceToSR) window.CivicsApp.announceToSR('תודה על המשוב!');
 }
 
 function onAnswerInput(textarea) {
