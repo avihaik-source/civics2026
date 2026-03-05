@@ -7142,3 +7142,99 @@ mark.hl-pink {
     .kc-toggle { padding: 12px 14px; font-size: 14px; }
     .kc-def { font-size: 13px; }
 }
+/* ===== Comparison Table Enhancements ===== */
+.comparison-table-wrap {
+  margin: 12px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.comparison-table-wrap .comparison-table {
+  min-width: 400px;
+}
+.comp-topic {
+  font-weight: 700;
+  color: var(--primary-blue);
+  white-space: nowrap;
+}
+
+/* Similarities Section */
+.comparison-similarities {
+  margin: 12px 0;
+  background: var(--bg-section, #f0f8ff);
+  border-radius: 10px;
+  padding: 16px;
+  border-right: 4px solid var(--primary-blue, #3498db);
+}
+.similarities-header {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--primary-blue, #3498db);
+  margin-bottom: 12px;
+}
+.similarities-header i {
+  margin-left: 6px;
+}
+.similarities-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.similarity-item {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: var(--bg-white, #fff);
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.similarity-item i {
+  color: #2ecc71;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+/* Dark theme adjustments */
+body.dark-theme .comparison-similarities {
+  background: #1a2332;
+  border-right-color: #5dade2;
+}
+body.dark-theme .similarity-item {
+  background: #1e2d3d;
+}
+body.dark-theme .comp-topic {
+  color: #5dade2;
+}
+
+/* Soft theme adjustments */
+body.soft-theme .comparison-similarities {
+  background: #fdf2f8;
+  border-right-color: #d63384;
+}
+body.soft-theme .similarity-item {
+  background: #fff;
+}
+body.soft-theme .comp-topic {
+  color: #d63384;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .comparison-table-wrap .comparison-table {
+    min-width: 320px;
+    font-size: 12px;
+  }
+  .comparison-table-wrap .comparison-table th,
+  .comparison-table-wrap .comparison-table td {
+    padding: 8px 10px;
+  }
+  .comparison-similarities {
+    padding: 12px;
+  }
+  .similarity-item {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+}

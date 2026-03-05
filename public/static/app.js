@@ -1653,7 +1653,7 @@ function renderLearnTab(unit) {
     // Render content sections
     hakItems.forEach(function(sec, idx) {
       var globalIdx = hakStart + idx;
-      var bodyFormatted = formatMikudBody(sec.body);
+      var bodyFormatted = formatMikudBody(sec.body, sec.header);
       var plainText = sec.header + '. ' + sec.body.replace(/\n/g, ' ').substring(0, 500);
 
       html += '<div class="haknaya-card" tabindex="0" role="article" aria-label="' + esc(sec.header) + '">';
@@ -1837,8 +1837,15 @@ function renderLearnTab(unit) {
 }
 
 // ===== FORMAT MIKUD BODY TEXT (enhanced for readability) =====
-function formatMikudBody(text) {
+function formatMikudBody(text, sectionHeader) {
   if (!text) return '';
+  
+  // Check if this is a comparison section - render as table
+  var isComparison = sectionHeader && (/השוואה|הבדלים|דימיון|שוני/).test(sectionHeader);
+  if (isComparison && text.indexOf(' – ') > -1) {
+    return formatComparisonTable(text, sectionHeader);
+  }
+  
   var html = text;
   // Split by newlines
   var lines = html.split('\n');
@@ -1872,6 +1879,61 @@ function formatMikudBody(text) {
   }
   if (inList) result += '</ul>';
   return result || '<p class="haknaya-para">' + text.replace(/\n/g, '<br>') + '</p>';
+}
+
+function formatComparisonTable(text, header) {
+  var lines = text.split('\n').filter(function(l) { return l.trim(); });
+  var isShoni = (/הבדלים|שוני/).test(header);
+  var isDimyon = (/דמיון|דימיון/).test(header);
+  
+  if (isShoni) {
+    // Differences table with two columns
+    var rows = [];
+    lines.forEach(function(line) {
+      var dashIdx = line.indexOf(' – ');
+      if (dashIdx > 0) {
+        var topic = line.substring(0, dashIdx).trim();
+        var rest = line.substring(dashIdx + 3).trim();
+        // Try to split by "לעומת זאת"
+        var vsIdx = rest.indexOf('לעומת זאת');
+        if (vsIdx > 0) {
+          rows.push({ topic: topic, col1: rest.substring(0, vsIdx).trim().replace(/[.,]\s*$/, ''), col2: rest.substring(vsIdx + 9).trim().replace(/^[,]\s*/, '') });
+        } else {
+          rows.push({ topic: topic, col1: rest, col2: '' });
+        }
+      }
+    });
+    if (rows.length > 0) {
+      var table = '<div class="comparison-table-wrap"><table class="comparison-table">';
+      table += '<thead><tr><th>נושא</th><th>החלטה 181</th><th>מגילת העצמאות</th></tr></thead><tbody>';
+      rows.forEach(function(r) {
+        table += '<tr><td class="comp-topic">' + r.topic + '</td><td>' + r.col1 + '</td><td>' + r.col2 + '</td></tr>';
+      });
+      table += '</tbody></table></div>';
+      return table;
+    }
+  }
+  
+  if (isDimyon) {
+    // Similarities - render as nicely formatted list
+    var items = [];
+    lines.forEach(function(line) {
+      var clean = line.replace(/^[•●]\s*/, '').trim();
+      if (clean) items.push(clean);
+    });
+    if (items.length > 0) {
+      var list = '<div class="comparison-similarities"><div class="similarities-header"><i class="fas fa-check-double"></i> נקודות דמיון</div><ul class="similarities-list">';
+      items.forEach(function(item) {
+        var formatted = item.replace(/^([^–\-:]{3,40})([–\-:])/, '<strong>$1</strong>$2');
+        list += '<li class="similarity-item"><i class="fas fa-check"></i> ' + formatted + '</li>';
+      });
+      list += '</ul></div>';
+      return list;
+    }
+  }
+  
+  // Fallback - render normally
+  return formatMikudBody(text, null);
 }
 
 // ===== HAKNAYA PAGE NAVIGATION =====
