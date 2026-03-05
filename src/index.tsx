@@ -275,7 +275,7 @@ async function getTeacherPassword(db: D1Database | null, envPassword?: string): 
       if (row && row.value) return String(row.value);
     } catch (e) { /* table might not exist yet */ }
   }
-  return envPassword || 'civics2026!';
+  return envPassword || '0512';
 }
 
 async function verifyTeacherPassword(c: any): Promise<boolean> {

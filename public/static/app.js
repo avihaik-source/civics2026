@@ -2,6 +2,44 @@
 (function() {
 'use strict';
 
+// ===== FORMAT DEFINITION TEXT (convert numbered lists to bullet HTML) =====
+function formatDef(text) {
+  if (!text) return '';
+  // Convert \n to <br> and bullet points to styled list
+  let html = text;
+  // If text contains bullet points (•), wrap them in a proper list
+  if (html.includes('•')) {
+    // Split by \n, process lines
+    const lines = html.split('\n');
+    let result = '';
+    let inList = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line.startsWith('•')) {
+        if (!inList) {
+          result += '<ul class="def-bullet-list">';
+          inList = true;
+        }
+        result += '<li>' + line.substring(1).trim() + '</li>';
+      } else {
+        if (inList) {
+          result += '</ul>';
+          inList = false;
+        }
+        if (line) {
+          result += (result ? '<br>' : '') + line;
+        } else if (result && !inList) {
+          result += '<br>';
+        }
+      }
+    }
+    if (inList) result += '</ul>';
+    return result;
+  }
+  // Fallback: just convert \n to <br>
+  return html.replace(/\n/g, '<br>');
+}
+
 // ===== SKIP LINK (injected before app mounts) =====
 (function injectSkipLink() {
   if (document.getElementById('skip-link')) return;
@@ -1580,7 +1618,7 @@ function renderLearnTab(unit) {
   pageItems.forEach((c, i) => {
     html += `<div class="definition-box" tabindex="0" role="article" aria-label="מושג: ${esc(c.term)}">
       <div class="def-title">${c.term} ${ttsBtn(c.term + '. ' + c.def, c.term)}</div>
-      <div class="def-text highlightable" data-hl-id="concept-${unit.id}-${i}">${c.def}</div>
+      <div class="def-text highlightable" data-hl-id="concept-${unit.id}-${i}">${formatDef(c.def)}</div>
       <div class="def-source">מקור: ${c.source}</div>
     </div>`;
   });
@@ -2143,7 +2181,7 @@ function renderScaffoldSimplified(scaffold, q) {
       <div class="glossary-list">
         ${glossaryTerms.map(t => `<details class="glossary-item">
           <summary class="glossary-term" tabindex="0"><i class="fas fa-book-open"></i> ${esc(t.term)}</summary>
-          <div class="glossary-def">${esc(t.def)}</div>
+          <div class="glossary-def">${formatDef(esc(t.def))}</div>
         </details>`).join('')}
       </div>
     </div>` : ''}
