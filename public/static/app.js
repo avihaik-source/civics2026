@@ -1607,8 +1607,76 @@ function renderUnitPage() {
   return html;
 }
 
-// ===== LEARN TAB WITH CHUNKING =====
+// ===== LEARN TAB WITH FULL CONTENT (HAKNAYA) + CONCEPTS + EXTRAS =====
 function renderLearnTab(unit) {
+  let html = '';
+
+  // ===== SECTION 1: HAKNAYA - Full content from MIKUD_DATA =====
+  const mikudUnit = (typeof MIKUD_DATA !== 'undefined') ? MIKUD_DATA.units.find(function(m) { return m.unit === unit.id; }) : null;
+  if (mikudUnit && mikudUnit.sections && mikudUnit.sections.length > 0) {
+    // Filter sections with meaningful content
+    const contentSections = mikudUnit.sections.filter(function(s) { return s.body && s.body.length > 10; });
+    const headerOnlySections = mikudUnit.sections.filter(function(s) { return !s.body || s.body.length <= 10; });
+
+    // Determine how many sections to show per page (chunking for ASD)
+    const hakChunkSize = 5;
+    if (!A11Y.hakPage) A11Y.hakPage = {};
+    const hakPage = A11Y.hakPage[unit.id] || 0;
+    const hakTotal = Math.ceil(contentSections.length / hakChunkSize);
+    const hakStart = hakPage * hakChunkSize;
+    const hakItems = contentSections.slice(hakStart, hakStart + hakChunkSize);
+
+    html += '<div class="content-section haknaya-section" role="region" aria-label="חומר לימוד מלא">';
+    html += '<h2><i class="fas fa-book-open"></i> חומר לימוד מלא - מיקוד בגרות 2026</h2>';
+    html += '<p class="haknaya-subtitle">מקור: מיקוד בגרות 2026 | ' + mikudUnit.sections.length + ' נושאים | ' + mikudUnit.charCount.toLocaleString() + ' תווים</p>';
+
+    // Show key topics list (header-only sections as topic overview)
+    if (headerOnlySections.length > 2) {
+      html += '<div class="haknaya-topics-bar">';
+      html += '<strong><i class="fas fa-list"></i> נושאי משנה ביחידה:</strong> ';
+      html += headerOnlySections.slice(0, 12).map(function(s) { return '<span class="haknaya-topic-tag">' + s.header + '</span>'; }).join(' ');
+      html += '</div>';
+    }
+
+    // Progress bar
+    if (hakTotal > 1) {
+      html += '<div class="haknaya-progress"><div class="haknaya-progress-fill" style="width:' + Math.round(((hakPage + 1) / hakTotal) * 100) + '%"></div></div>';
+      html += '<div class="chunk-info" role="status">מציג קטע ' + (hakStart+1) + '-' + Math.min(hakStart+hakChunkSize, contentSections.length) + ' מתוך ' + contentSections.length + ' קטעים</div>';
+    }
+
+    // Render content sections
+    hakItems.forEach(function(sec, idx) {
+      var globalIdx = hakStart + idx;
+      var bodyFormatted = formatMikudBody(sec.body);
+      var plainText = sec.header + '. ' + sec.body.replace(/\n/g, ' ').substring(0, 500);
+
+      html += '<div class="haknaya-card" tabindex="0" role="article" aria-label="' + esc(sec.header) + '">';
+      html += '<div class="haknaya-card-header">';
+      html += '<span class="haknaya-card-num">' + (globalIdx + 1) + '</span>';
+      html += '<h3 class="haknaya-card-title">' + sec.header + '</h3>';
+      html += ttsBtn(plainText, sec.header);
+      html += '</div>';
+      html += '<div class="haknaya-card-body highlightable" data-hl-id="hak-' + unit.id + '-' + globalIdx + '" style="font-size:' + A11Y.fontSize + '%">' + bodyFormatted + '</div>';
+      html += '</div>';
+    });
+
+    // Pagination
+    if (hakTotal > 1) {
+      html += '<div class="chunk-pagination" role="navigation" aria-label="עמודי חומר הקניה">';
+      if (hakPage > 0) {
+        html += '<button class="btn btn-sm btn-primary" onclick="window.CivicsApp.setHakPage(' + unit.id + ',' + (hakPage-1) + ')"><i class="fas fa-arrow-right"></i> הקודם</button>';
+      }
+      html += '<span class="chunk-page-info">קטע ' + (hakPage+1) + ' מתוך ' + hakTotal + '</span>';
+      if (hakPage < hakTotal - 1) {
+        html += '<button class="btn btn-sm btn-primary" onclick="window.CivicsApp.setHakPage(' + unit.id + ',' + (hakPage+1) + ')">הבא <i class="fas fa-arrow-left"></i></button>';
+      }
+      html += '</div>';
+    }
+
+    html += '</div>';
+  }
+
+  // ===== SECTION 2: CONCEPTS (existing concept cards) =====
   const concepts = unit.concepts;
   const chunkSize = A11Y.chunkSize;
   const totalPages = Math.ceil(concepts.length / chunkSize);
@@ -1616,7 +1684,7 @@ function renderLearnTab(unit) {
   const start = currentPage * chunkSize;
   const pageItems = concepts.slice(start, start + chunkSize);
   
-  let html = `<div class="content-section" role="region" aria-label="מושגים והגדרות">
+  html += `<div class="content-section" role="region" aria-label="מושגים והגדרות">
     <h2><i class="fas fa-graduation-cap"></i> מושגים והגדרות</h2>
     <div class="text-highlight-bar" role="toolbar" aria-label="כלי הדגשה">
       <button class="highlight-btn hl-yellow${_activeHighlight==='yellow'?' active':''}" onclick="window.CivicsApp.toggleHighlight('yellow')" title="הדגשה צהובה" aria-label="הדגשה צהובה"></button>
@@ -1648,6 +1716,8 @@ function renderLearnTab(unit) {
     html += `</div>`;
   }
   html += `</div>`;
+
+  // ===== SECTION 3: EXTRAS (Infographics, Examples, Comparisons, Mnemonics) =====
 
   // Infographics
   if (typeof INFOGRAPHICS !== 'undefined') {
@@ -1720,8 +1790,8 @@ function renderLearnTab(unit) {
     }
   }
 
-  // Study Materials from source documents (mikud, ometz, hidud)
-  if (typeof STUDY_MATERIALS !== 'undefined' && STUDY_MATERIALS[unit.id] && STUDY_MATERIALS[unit.id].paragraphs.length > 0) {
+  // Legacy Study Materials (kept for backwards compatibility)
+  if (typeof STUDY_MATERIALS !== 'undefined' && STUDY_MATERIALS[unit.id] && STUDY_MATERIALS[unit.id].paragraphs.length > 0 && !mikudUnit) {
     var sm = STUDY_MATERIALS[unit.id];
     var smChunkSize = 8;
     var smPage = A11Y.studyMatPage && A11Y.studyMatPage[unit.id] || 0;
@@ -1758,6 +1828,53 @@ function renderLearnTab(unit) {
   }
 
   return html;
+}
+
+// ===== FORMAT MIKUD BODY TEXT (enhanced for readability) =====
+function formatMikudBody(text) {
+  if (!text) return '';
+  var html = text;
+  // Split by newlines
+  var lines = html.split('\n');
+  var result = '';
+  var inList = false;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (!line) {
+      if (inList) { result += '</ul>'; inList = false; }
+      continue;
+    }
+    // Detect list items (bullets, dashes, numbered)
+    var isBullet = /^[\u2022\u2023\u25CF\u25CB\u25AA\u25AB•●○■□]/.test(line);
+    var isDash = /^[-–—]\s/.test(line);
+    var isNumbered = /^\d+[\.\)]\s/.test(line);
+    var isHebLetter = /^[אבגדהוזחטיכלמנסעפצקרשת][\.\)]\s/.test(line);
+    if (isBullet || isDash || isNumbered || isHebLetter) {
+      if (!inList) { result += '<ul class="haknaya-list">'; inList = true; }
+      var cleanLine = line.replace(/^[\u2022\u2023\u25CF\u25CB\u25AA\u25AB•●○■□\-–—]\s*/, '').replace(/^\d+[\.\)]\s*/, '').replace(/^[אבגדהוזחטיכלמנסעפצקרשת][\.\)]\s*/, '');
+      // Bold key terms at start of list items (before colon or dash)
+      cleanLine = cleanLine.replace(/^([^:–\-]{3,40})([:–\-])/, '<strong>$1</strong>$2');
+      result += '<li>' + cleanLine + '</li>';
+    } else {
+      if (inList) { result += '</ul>'; inList = false; }
+      // Bold key terms in definitions (pattern: "term - definition" or "term: definition")
+      var formattedLine = line.replace(/^([^:–\-]{3,50})([:–\-]\s)/, '<strong>$1</strong>$2');
+      // Highlight quoted text
+      formattedLine = formattedLine.replace(/"([^"]+)"/g, '<span class="haknaya-quote">"$1"</span>');
+      result += '<p class="haknaya-para">' + formattedLine + '</p>';
+    }
+  }
+  if (inList) result += '</ul>';
+  return result || '<p class="haknaya-para">' + text.replace(/\n/g, '<br>') + '</p>';
+}
+
+// ===== HAKNAYA PAGE NAVIGATION =====
+function setHakPage(unitId, page) {
+  if (!A11Y.hakPage) A11Y.hakPage = {};
+  A11Y.hakPage[unitId] = page;
+  render();
+  var el = document.querySelector('.haknaya-section');
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
 function setChunkPage(unitId, page) {
@@ -3527,7 +3644,7 @@ window.CivicsApp = {
   loadTeacherData, showStudentDetail, closeStudentDetail, exportAllData,
   exportStudentData, togglePause, setTheme, setFontSize, setFontType,
   toggleQuietMode, toggleHideTimers, toggleReducedMotion, toggleA11yPanel,
-  startBreathing, stopBreathing, setChunkPage, setStudyMatPage, toggleTTS, speakText,
+  startBreathing, stopBreathing, setChunkPage, setStudyMatPage, setHakPage, toggleTTS, speakText,
   stopTTS, setScaffoldLevel, setScaffoldDefault, saveNote, resetAllData, setDailyGoal,
   showPositiveFeedback, onScaffoldCheck, announceToSR,
   toggleMinimalMode, saveTemplateFill, copyTemplateToAnswer,

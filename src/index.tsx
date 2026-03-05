@@ -61,13 +61,14 @@ app.get('/', (c) => {
 <body>
 <div id="app"><div style="display:flex;justify-content:center;align-items:center;height:100vh;direction:rtl;font-family:Assistant,sans-serif"><div style="text-align:center"><div style="font-size:48px;margin-bottom:16px">🎓</div><div style="font-size:20px;color:#0038b8;font-weight:700">טוען את אזרחות 2026...</div></div></div></div>
 <script src="/static/data.js" defer></script>
+<script src="/static/mikud-data.js" defer></script>
 <script src="/static/scaffolding.js" defer></script>
 <script src="/static/app.js" defer></script>
 <script src="/static/features.js" defer></script>
 <script>
 // Lazy-load large data files after main app loads
 window.addEventListener('load',function(){
-  var files=['/static/questions-data.js','/static/study-materials.js','/static/mikud-data.js'];
+  var files=['/static/questions-data.js','/static/study-materials.js'];
   files.forEach(function(src){var s=document.createElement('script');s.src=src;s.async=true;document.body.appendChild(s)});
 });
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}
