@@ -171,8 +171,9 @@ npm run deploy            # פריסה ל-Cloudflare Pages
 - **פלטפורמה**: Cloudflare Pages
 - **סטטוס**: ✅ פעיל
 - **טכנולוגיות**: Hono + TypeScript + Vanilla JS + D1
-- **עדכון אחרון**: 2026-03-04
-- **גיט**: 15+ commits
+- **עדכון אחרון**: 2026-03-05
+- **גיט**: 25+ commits
+- **תיעוד API**: ראה [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
 
 ## קרדיטים
 - פיתוח: אביחי ק.
