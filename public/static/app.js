@@ -2,6 +2,12 @@
 (function() {
 'use strict';
 
+// ===== ENSURE EXAM_QUESTIONS EXISTS (may be loaded lazily or missing) =====
+if (typeof window.EXAM_QUESTIONS === 'undefined') {
+  window.EXAM_QUESTIONS = [];
+}
+var EXAM_QUESTIONS = window.EXAM_QUESTIONS;
+
 // ===== FORMAT DEFINITION TEXT (convert numbered lists to bullet HTML) =====
 function formatDef(text) {
   if (!text) return '';
@@ -1917,10 +1923,79 @@ function getExamplesForUnit(id) {
 
 // ===== PRACTICE TAB WITH SCAFFOLDING SYSTEM =====
 function renderPracticeTab(unit, questions) {
-  if (questions.length === 0) {
-    return `<div class="empty-state"><div class="icon">📝</div><p>אין שאלות מבחינות ליחידה זו</p></div>`;
+  let html = '';
+
+  // ===== SECTION 1: UNIT PRACTICE QUESTIONS (MC + Open) =====
+  if (unit.practice && unit.practice.length > 0) {
+    html += '<div class="content-section practice-unit-section" role="region" aria-label="שאלות תרגול ליחידה">';
+    html += '<h2><i class="fas fa-pen-fancy"></i> שאלות תרגול - ' + esc(unit.title) + '</h2>';
+    html += '<p class="practice-intro">ענו על השאלות הבאות כדי לבדוק את ההבנה שלכם. לחצו על "הצג תשובה" לאחר שניסיתם לענות.</p>';
+
+    unit.practice.forEach(function(pq, idx) {
+      var pqId = 'pq-' + unit.id + '-' + idx;
+      var answered = _practiceState[pqId] || false;
+      var selectedOption = _practiceSelections[pqId];
+
+      html += '<div class="practice-question-card" role="article" aria-label="שאלה ' + (idx+1) + '">';
+      html += '<div class="pq-header">';
+      html += '<span class="pq-num">' + (idx+1) + '</span>';
+      html += '<span class="pq-type-badge pq-type-' + pq.type + '">' + (pq.type === 'mc' ? 'רב-ברירה' : 'שאלה פתוחה') + '</span>';
+      html += ttsBtn(pq.q, 'שאלה ' + (idx+1));
+      html += '</div>';
+      html += '<div class="pq-question">' + pq.q + '</div>';
+
+      if (pq.type === 'mc' && pq.options) {
+        html += '<div class="pq-options" role="radiogroup">';
+        pq.options.forEach(function(opt, oi) {
+          var isCorrect = oi === pq.answer;
+          var isSelected = selectedOption === oi;
+          var optClass = 'pq-option';
+          if (answered) {
+            if (isCorrect) optClass += ' pq-correct';
+            else if (isSelected && !isCorrect) optClass += ' pq-wrong';
+          }
+          if (isSelected) optClass += ' pq-selected';
+          html += '<button class="' + optClass + '" onclick="window.CivicsApp.selectPracticeOption(\'' + pqId + '\',' + oi + ',' + pq.answer + ')" ' + (answered ? 'disabled' : '') + '>';
+          html += '<span class="pq-option-letter">' + String.fromCharCode(1488 + oi) + '.</span> ';
+          html += opt;
+          if (answered && isCorrect) html += ' <i class="fas fa-check" style="color:#27ae60;margin-right:8px"></i>';
+          if (answered && isSelected && !isCorrect) html += ' <i class="fas fa-times" style="color:#e74c3c;margin-right:8px"></i>';
+          html += '</button>';
+        });
+        html += '</div>';
+      } else {
+        // Open-ended question
+        html += '<div class="pq-open-answer">';
+        html += '<textarea class="pq-textarea" id="' + pqId + '-txt" placeholder="כתבו את תשובתכם כאן..." rows="4"></textarea>';
+        html += '<button class="btn btn-sm btn-primary pq-check-btn" onclick="window.CivicsApp.showPracticeAnswer(\'' + pqId + '\')"><i class="fas fa-eye"></i> הצג תשובה מומלצת</button>';
+        html += '</div>';
+      }
+
+      // Answer feedback (shown after answering)
+      if (answered && pq.explanation) {
+        html += '<div class="pq-feedback" role="alert">';
+        html += '<div class="pq-feedback-header"><i class="fas fa-lightbulb"></i> הסבר</div>';
+        if (pq.type === 'open' && pq.answer) {
+          html += '<div class="pq-model-answer"><strong>תשובה מומלצת:</strong> ' + pq.answer + '</div>';
+        }
+        html += '<div class="pq-explanation">' + pq.explanation + '</div>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+    });
+
+    html += '</div>';
   }
-  let html = `<div class="practice-instructions" role="region" aria-label="הנחיות למענה">
+
+  // ===== SECTION 2: EXAM QUESTIONS (existing) =====
+  if (questions.length === 0 && (!unit.practice || unit.practice.length === 0)) {
+    return '<div class="empty-state"><div class="icon">📝</div><p>אין שאלות תרגול ליחידה זו</p></div>';
+  }
+
+  if (questions.length > 0) {
+  html += '<div class="content-section" role="region" aria-label="שאלות מבחינות"><h2><i class="fas fa-file-alt"></i> שאלות מבחינות בגרות</h2>';
+  html += `<div class="practice-instructions" role="region" aria-label="הנחיות למענה">
     <div class="practice-instructions-header">
       <h3><i class="fas fa-clipboard-list"></i> הנחיות למענה על שאלות</h3>
       <button class="btn btn-minimal-toggle${A11Y.minimalMode ? ' active' : ''}" onclick="window.CivicsApp.toggleMinimalMode()" aria-label="${A11Y.minimalMode ? 'כבה מצב מינימלי' : 'הפעל מצב מינימלי'}" title="מצב מינימלי - מפחית עומס חזותי">
@@ -2074,7 +2149,37 @@ function renderPracticeTab(unit, questions) {
       </div>
     </div>`;
   });
+  html += '</div>'; // close exam questions section
+  } // end if questions.length > 0
   return html;
+}
+
+// ===== PRACTICE STATE MANAGEMENT =====
+var _practiceState = {};
+var _practiceSelections = {};
+var _kcExpanded = {};
+try {
+  _practiceState = JSON.parse(localStorage.getItem('civics2026_practice_state') || '{}');
+  _practiceSelections = JSON.parse(localStorage.getItem('civics2026_practice_selections') || '{}');
+} catch(e) {}
+
+function selectPracticeOption(pqId, selectedIdx, correctIdx) {
+  _practiceSelections[pqId] = selectedIdx;
+  _practiceState[pqId] = true;
+  localStorage.setItem('civics2026_practice_state', JSON.stringify(_practiceState));
+  localStorage.setItem('civics2026_practice_selections', JSON.stringify(_practiceSelections));
+  render();
+}
+
+function showPracticeAnswer(pqId) {
+  _practiceState[pqId] = true;
+  localStorage.setItem('civics2026_practice_state', JSON.stringify(_practiceState));
+  render();
+}
+
+function toggleKeyConcept(kcId) {
+  _kcExpanded[kcId] = !_kcExpanded[kcId];
+  render();
 }
 
 // ===== SCAFFOLDING HELPERS =====
@@ -2446,8 +2551,36 @@ function renderScaffoldSettings() {
 
 // ===== SUMMARY TAB =====
 function renderSummaryTab(unit) {
+  let html = '';
   const prog = getProgress(unit.id);
-  let html = `<div class="checklist-section" role="region" aria-label="רשימת מעקב">
+
+  // ===== SECTION 1: KEY CONCEPTS =====
+  if (unit.keyConcepts && unit.keyConcepts.length > 0) {
+    html += '<div class="content-section key-concepts-section" role="region" aria-label="מושגי מפתח">';
+    html += '<h2><i class="fas fa-key"></i> מושגי מפתח ליחידה</h2>';
+    html += '<p class="kc-intro">' + unit.keyConcepts.length + ' מושגים מרכזיים שחשוב לדעת. לחצו על מושג לפתיחת ההגדרה.</p>';
+    html += '<div class="kc-grid">';
+    unit.keyConcepts.forEach(function(kc, idx) {
+      var kcId = 'kc-' + unit.id + '-' + idx;
+      var isExpanded = _kcExpanded[kcId] || false;
+      html += '<div class="kc-card' + (isExpanded ? ' kc-expanded' : '') + '" role="article">';
+      html += '<button class="kc-toggle" onclick="window.CivicsApp.toggleKeyConcept(\'' + kcId + '\')" aria-expanded="' + isExpanded + '" aria-controls="' + kcId + '-def">';
+      html += '<span class="kc-num">' + (idx + 1) + '</span>';
+      html += '<span class="kc-term">' + kc.term + '</span>';
+      html += '<i class="fas fa-chevron-' + (isExpanded ? 'up' : 'down') + ' kc-arrow"></i>';
+      html += ttsBtn(kc.term + '. ' + kc.def, kc.term);
+      html += '</button>';
+      if (isExpanded) {
+        html += '<div class="kc-def" id="' + kcId + '-def">' + kc.def + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // ===== SECTION 2: CHECKLIST =====
+  html += `<div class="checklist-section" role="region" aria-label="רשימת מעקב">
     <h3>✓ מה למדתי ביחידה הזו?</h3>`;
   unit.checklist.forEach((item, i) => {
     const checked = prog.checklist[i] || false;
@@ -3652,6 +3785,7 @@ window.CivicsApp = {
   retryConnection, predictScore, setContrast,
   generateLesson, printLesson, copyLesson,
   toggleHighlight, clearHighlights, resetTeacherPassword,
+  selectPracticeOption, showPracticeAnswer, toggleKeyConcept,
   // Exam questions API
   setQExam(idx) { _questionsState.currentExam = idx; _questionsState.expandedQuestion = null; _questionsState.filterUnit = 0; render(); },
   setQSearch(q) { _questionsState.searchQuery = q; _questionsState.expandedQuestion = null; render(); setTimeout(() => { const el = document.getElementById('q-search-input'); if (el) { el.focus(); el.value = q; } }, 50); },
