@@ -67,7 +67,7 @@ app.get('/', (c) => {
 <script>
 // Lazy-load large data files after main app loads
 window.addEventListener('load',function(){
-  var files=['/static/questions-data.js','/static/study-materials.js'];
+  var files=['/static/questions-data.js','/static/study-materials.js','/static/mikud-data.js'];
   files.forEach(function(src){var s=document.createElement('script');s.src=src;s.async=true;document.body.appendChild(s)});
 });
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}

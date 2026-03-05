@@ -1018,13 +1018,15 @@ function onHashChange() {
     STATE.currentPage = 'about';
   } else if (hash === 'student-progress') {
     STATE.currentPage = 'student-progress';
+  } else if (hash === 'mikud') {
+    STATE.currentPage = 'mikud';
   } else {
     STATE.currentPage = 'home';
     STATE.currentUnit = null;
   }
   // Transition announcement for accessibility
   if (prevPage !== STATE.currentPage) {
-    const pageNames = {home: 'דף הבית', unit: 'יחידת לימוד', questions: 'שאלות בגרות', dashboard: 'לוח מחוונים', 'exam-sim': 'סימולציית בחינה', breathing: 'תרגיל נשימה', practice: 'תרגול שאלה', 'question-list': 'רשימת שאלות לתרגול', timeline: 'ציר זמן', acronyms: 'ראשי תיבות', tips: 'כללי הזהב', about: 'אודות', 'student-progress': 'ההתקדמות שלי'};
+    const pageNames = {home: 'דף הבית', unit: 'יחידת לימוד', questions: 'שאלות בגרות', dashboard: 'לוח מחוונים', 'exam-sim': 'סימולציית בחינה', breathing: 'תרגיל נשימה', practice: 'תרגול שאלה', 'question-list': 'רשימת שאלות לתרגול', timeline: 'ציר זמן', acronyms: 'ראשי תיבות', tips: 'כללי הזהב', about: 'אודות', 'student-progress': 'ההתקדמות שלי', mikud: 'חומר מיקוד'};
     announceToSR('עוברים ל' + (pageNames[STATE.currentPage] || STATE.currentPage));
   }
   // Track study time for break reminders
@@ -1051,6 +1053,7 @@ function navigate(page, unitId) {
   else if (page === 'tips') location.hash = 'tips';
   else if (page === 'about') location.hash = 'about';
   else if (page === 'student-progress') location.hash = 'student-progress';
+  else if (page === 'mikud') location.hash = 'mikud';
   else location.hash = '';
 }
 
@@ -1075,7 +1078,8 @@ function render() {
     'acronyms': 'אזרחות 2026 - ראשי תיבות',
     'tips': 'אזרחות 2026 - 7 כללי הזהב',
     'about': 'אזרחות 2026 - אודות',
-    'student-progress': 'אזרחות 2026 - ההתקדמות שלי'
+    'student-progress': 'אזרחות 2026 - ההתקדמות שלי',
+    'mikud': 'אזרחות 2026 - חומר מיקוד'
   };
   const titleVal = titleMap[STATE.currentPage];
   document.title = typeof titleVal === 'function' ? titleVal() : (titleVal || 'אזרחות 2026');
@@ -1339,6 +1343,9 @@ function renderSidebar() {
       <a class="sidebar-item${STATE.currentPage==='tips'?' active':''}" href="#tips" tabindex="0" aria-label="כללי הזהב" aria-current="${STATE.currentPage==='tips'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-lightbulb"></i></span> 7 כללי הזהב
       </a>
+      <a class="sidebar-item${STATE.currentPage==='mikud'?' active':''}" href="#mikud" tabindex="0" aria-label="חומר מיקוד" aria-current="${STATE.currentPage==='mikud'?'page':'false'}">
+        <span class="item-icon"><i class="fas fa-book-open"></i></span> חומר מיקוד
+      </a>
       <a class="sidebar-item${STATE.currentPage==='student-progress'?' active':''}" href="#student-progress" tabindex="0" aria-label="ההתקדמות שלי" aria-current="${STATE.currentPage==='student-progress'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-chart-pie"></i></span> ההתקדמות שלי
       </a>
@@ -1442,6 +1449,11 @@ function renderHomePage() {
         <span class="ql-icon">💡</span>
         <span class="ql-title">7 כללי הזהב</span>
         <span class="ql-desc">טיפים ללמידה</span>
+      </a>
+      <a href="#mikud" class="quick-link-card" aria-label="חומר מיקוד">
+        <span class="ql-icon">📚</span>
+        <span class="ql-title">חומר מיקוד</span>
+        <span class="ql-desc">391 סעיפים</span>
       </a>
       <a href="#student-progress" class="quick-link-card" aria-label="ההתקדמות שלי">
         <span class="ql-icon">📊</span>

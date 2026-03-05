@@ -731,6 +731,100 @@ function resetPracticeProgress() {
   if (window._civicsRender) window._civicsRender();
 }
 
+// ===== MIKUD PAGE - Full source material from bagrut focus documents =====
+function renderMikudPage() {
+  const hasMikud = typeof MIKUD_DATA !== 'undefined';
+  if (!hasMikud) {
+    return `<div class="page-container" style="direction:rtl;padding:20px">
+      <button class="back-btn" onclick="location.hash=''" aria-label="חזרה לדף הבית"><i class="fas fa-arrow-right"></i> חזרה</button>
+      <h1><i class="fas fa-book-open"></i> חומר מיקוד</h1>
+      <p>טוען את חומר המיקוד... נסו לרענן את הדף.</p>
+    </div>`;
+  }
+
+  const state = window._mikudState || { openUnit: null, searchTerm: '', showGuidelines: false };
+  window._mikudState = state;
+
+  let html = `<div class="page-container" style="direction:rtl;padding:20px;max-width:900px;margin:0 auto">
+    <button class="back-btn" onclick="location.hash=''" aria-label="חזרה לדף הבית"><i class="fas fa-arrow-right"></i> חזרה</button>
+    <h1 style="color:#0038b8;margin-bottom:8px"><i class="fas fa-book-open"></i> חומר מיקוד בגרות 2026</h1>
+    <p style="color:#666;margin-bottom:16px">${MIKUD_DATA.totalSections} סעיפים | ${(MIKUD_DATA.totalChars/1000).toFixed(0)}K תווים | מקור: 3 מסמכים רשמיים</p>
+    
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <input type="text" id="mikud-search" placeholder="חיפוש בחומר המיקוד..." 
+        value="${state.searchTerm}" 
+        oninput="window._mikudState.searchTerm=this.value;window.CivicsFeatures.filterMikud()"
+        style="flex:1;min-width:200px;padding:10px 14px;border:2px solid #ddd;border-radius:8px;font-size:16px;direction:rtl" />
+      <button class="btn btn-primary" onclick="window._mikudState.showGuidelines=!window._mikudState.showGuidelines;render()" style="white-space:nowrap">
+        <i class="fas fa-lightbulb"></i> הנחיות בחינה (${MIKUD_DATA.examGuidelines.length})
+      </button>
+    </div>`;
+
+  // Guidelines panel
+  if (state.showGuidelines) {
+    html += `<div style="background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:16px;margin-bottom:20px">
+      <h3 style="color:#856404;margin-bottom:12px"><i class="fas fa-exclamation-triangle"></i> הנחיות חשובות לבחינה (ממשרד החינוך)</h3>`;
+    MIKUD_DATA.examGuidelines.forEach(g => {
+      html += `<div style="background:white;border-radius:8px;padding:12px;margin-bottom:8px">
+        <strong style="color:#0038b8">${g.title}</strong>
+        <p style="margin:6px 0 0;line-height:1.6">${g.content}</p>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Units accordion
+  html += `<div id="mikud-units">`;
+  MIKUD_DATA.units.forEach(unit => {
+    const isOpen = state.openUnit === unit.unit;
+    const hasContent = unit.sections && unit.sections.length > 0;
+    const charLabel = unit.charCount > 0 ? `${(unit.charCount/1000).toFixed(1)}K` : '—';
+    
+    html += `<div class="card" style="margin-bottom:8px;border-radius:10px;overflow:hidden;border:2px solid ${isOpen?'#0038b8':'#e2e8f0'}">
+      <div onclick="window._mikudState.openUnit=${isOpen?'null':unit.unit};render()" 
+        style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;background:${isOpen?'#0038b8':'#f8f9fa'};color:${isOpen?'white':'#333'}" 
+        role="button" tabindex="0" aria-expanded="${isOpen}" aria-label="יחידה ${unit.unit}: ${unit.title}">
+        <span style="font-size:18px;min-width:32px;text-align:center;font-weight:700">${unit.unit}</span>
+        <span style="flex:1;font-weight:600">${unit.title}</span>
+        <span style="font-size:13px;opacity:0.8">${unit.sections.length} סעיפים | ${charLabel}</span>
+        <i class="fas fa-chevron-${isOpen?'up':'down'}"></i>
+      </div>`;
+    
+    if (isOpen && hasContent) {
+      html += `<div style="padding:16px;background:white;max-height:600px;overflow-y:auto">`;
+      const searchLower = (state.searchTerm || '').trim();
+      unit.sections.forEach((sec, idx) => {
+        // Filter by search
+        if (searchLower && !sec.header.includes(searchLower) && !sec.body.includes(searchLower)) return;
+        
+        const headerHtml = sec.header ? `<div style="font-weight:700;color:#0038b8;margin-bottom:4px;font-size:15px">${highlightSearch(sec.header, searchLower)}</div>` : '';
+        const bodyHtml = sec.body ? `<div style="line-height:1.7;color:#333;white-space:pre-wrap;font-size:14px">${highlightSearch(sec.body.replace(/\\n/g, '\n'), searchLower)}</div>` : '';
+        
+        if (headerHtml || bodyHtml) {
+          html += `<div style="border-bottom:1px solid #eee;padding:10px 0">${headerHtml}${bodyHtml}</div>`;
+        }
+      });
+      html += `</div>`;
+    } else if (isOpen && unit.note) {
+      html += `<div style="padding:16px;background:white;color:#888;text-align:center"><i class="fas fa-info-circle"></i> ${unit.note}</div>`;
+    }
+    html += `</div>`;
+  });
+  html += `</div></div>`;
+  return html;
+}
+
+function highlightSearch(text, term) {
+  if (!term || term.length < 2) return text;
+  try {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return text.replace(new RegExp(escaped, 'gi'), match => `<mark style="background:#fef08a;padding:0 2px;border-radius:2px">${match}</mark>`);
+  } catch(e) { return text; }
+}
+
+window.CivicsFeatures = window.CivicsFeatures || {};
+window.CivicsFeatures.filterMikud = function() { if(typeof render==='function') render(); };
+
 // ===== NAVIGATION INTEGRATION =====
 // These functions are called from the modified routing in app.js
 function getPageRenderer(page, param) {
@@ -742,6 +836,7 @@ function getPageRenderer(page, param) {
     case 'tips': return renderTipsPage();
     case 'about': return renderAboutPage();
     case 'student-progress': return renderProgressDashboard();
+    case 'mikud': return renderMikudPage();
     default: return null;
   }
 }
@@ -750,6 +845,7 @@ function getPageRenderer(page, param) {
 window.CivicsFeatures = {
   loadOfficialQuestions,
   getPageRenderer,
+  renderMikudPage,
   renderQuestionPractice,
   renderQuestionList,
   renderTimelinePage,
