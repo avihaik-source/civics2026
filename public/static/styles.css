@@ -7238,3 +7238,285 @@ body.soft-theme .comp-topic {
     font-size: 13px;
   }
 }
+
+/* ===== TEACHER GUIDE PAGE ===== */
+.teacher-guide-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+.tg-hero {
+  background: linear-gradient(135deg, #E8F0FE 0%, #f0f7ff 100%);
+  border-radius: 16px;
+  padding: 32px 28px;
+  margin-bottom: 28px;
+  border: 1px solid #BBDEFB;
+  text-align: center;
+}
+.tg-hero h1 {
+  color: var(--primary-blue, #0038b8);
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.tg-subtitle {
+  font-size: 16px;
+  color: var(--text-gray, #666);
+  margin-bottom: 16px;
+}
+.tg-meta {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--text-gray, #666);
+  margin-bottom: 18px;
+}
+.tg-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tg-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tg-actions .btn {
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.tg-actions .btn-primary {
+  background: var(--primary-blue, #0038b8);
+  color: #fff;
+}
+.tg-actions .btn-secondary {
+  background: var(--bg-section, #f5f5f5);
+  color: var(--text-dark, #1a1a2e);
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+.tg-actions .btn-success {
+  background: #4CAF50;
+  color: #fff;
+}
+.tg-section {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e0e0e0);
+  background: var(--bg-white, #fff);
+}
+.tg-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--bg-section, #f8f9fa);
+  border: none;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-dark, #1a1a2e);
+  transition: background 0.2s;
+  font-family: inherit;
+  text-align: right;
+}
+.tg-section-header:hover {
+  background: #E8F0FE;
+}
+.tg-section-header span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tg-section-header i:first-child {
+  color: var(--primary-blue, #0038b8);
+}
+.tg-section-content {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+.tg-body {
+  line-height: 1.85;
+  font-size: 15px;
+}
+.tg-body h3 {
+  font-size: 17px;
+  color: var(--primary-blue, #0038b8);
+  margin: 20px 0 10px;
+  padding-right: 12px;
+  border-right: 3px solid var(--primary-blue, #0038b8);
+}
+.tg-body h3:first-child {
+  margin-top: 0;
+}
+.tg-body ul, .tg-body ol {
+  padding-right: 24px;
+  margin: 8px 0;
+}
+.tg-body li {
+  margin: 6px 0;
+}
+.tg-body p {
+  margin: 8px 0;
+}
+.tg-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 14px;
+}
+.tg-table th {
+  background: #E8F0FE;
+  padding: 10px 12px;
+  text-align: right;
+  font-weight: 700;
+  border: 1px solid #BBDEFB;
+  color: var(--primary-blue, #0038b8);
+}
+.tg-table td {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  vertical-align: top;
+}
+.tg-table tr:nth-child(2n) td {
+  background: var(--bg-section, #f8f9fa);
+}
+.tg-table tr:hover td {
+  background: #E8F0FE;
+}
+.tg-link {
+  color: var(--primary-blue, #0038b8);
+  text-decoration: underline;
+  font-weight: 600;
+}
+.tg-link:hover {
+  color: #002080;
+}
+.teacher-guide-page .tip-box {
+  background: #FFF3CD;
+  border: 1px solid #FFC107;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin: 14px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.teacher-guide-page .important-box {
+  background: #FFEBEE;
+  border: 1px solid #F44336;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin: 14px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.teacher-guide-page .success-box {
+  background: #E8F5E9;
+  border: 1px solid #4CAF50;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin: 14px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.tg-scenario {
+  background: var(--bg-section, #f8f9fa);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 12px 0;
+  border-right: 4px solid var(--primary-blue, #0038b8);
+}
+.tg-scenario h4 {
+  color: var(--primary-blue, #0038b8);
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.tg-ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.tg-ref-card {
+  background: var(--bg-section, #f8f9fa);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+.tg-ref-card h4 {
+  color: var(--primary-blue, #0038b8);
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+.tg-ref-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tg-ref-card li {
+  padding: 4px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+.tg-ref-card li:last-child {
+  border-bottom: none;
+}
+.tg-ref-card code {
+  background: #E8F0FE;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+/* Teacher guide responsive */
+@media (max-width: 768px) {
+  .tg-hero {
+    padding: 20px 16px;
+  }
+  .tg-hero h1 {
+    font-size: 22px;
+  }
+  .tg-meta {
+    gap: 10px;
+    font-size: 12px;
+  }
+  .tg-section-header {
+    font-size: 15px;
+    padding: 12px 14px;
+  }
+  .tg-section-content {
+    padding: 14px 16px;
+  }
+  .tg-table {
+    font-size: 12px;
+  }
+  .tg-table th, .tg-table td {
+    padding: 6px 8px;
+  }
+  .tg-ref-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Teacher guide print */
+@media print {
+  .teacher-guide-page .tg-actions,
+  .teacher-guide-page .tg-section-header i:last-child {
+    display: none !important;
+  }
+  .teacher-guide-page .tg-section-content {
+    display: block !important;
+  }
+  .teacher-guide-page .tg-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

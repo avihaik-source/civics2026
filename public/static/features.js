@@ -825,6 +825,415 @@ function highlightSearch(text, term) {
 window.CivicsFeatures = window.CivicsFeatures || {};
 window.CivicsFeatures.filterMikud = function() { if(typeof render==='function') render(); };
 
+// ===== TEACHER GUIDE PAGE =====
+let _tgOpenSections = {};
+
+function toggleTeacherSection(sectionId) {
+  _tgOpenSections[sectionId] = !_tgOpenSections[sectionId];
+  const el = document.getElementById('tg-section-' + sectionId);
+  const icon = document.getElementById('tg-icon-' + sectionId);
+  if (el) {
+    el.style.display = _tgOpenSections[sectionId] ? 'block' : 'none';
+    if (icon) icon.className = _tgOpenSections[sectionId] ? 'fas fa-chevron-down' : 'fas fa-chevron-left';
+  }
+}
+
+function expandAllTeacherSections() {
+  document.querySelectorAll('[id^="tg-section-"]').forEach(el => {
+    el.style.display = 'block';
+    const key = el.id.replace('tg-section-', '');
+    _tgOpenSections[key] = true;
+  });
+  document.querySelectorAll('[id^="tg-icon-"]').forEach(el => el.className = 'fas fa-chevron-down');
+}
+
+function collapseAllTeacherSections() {
+  document.querySelectorAll('[id^="tg-section-"]').forEach(el => {
+    el.style.display = 'none';
+    const key = el.id.replace('tg-section-', '');
+    _tgOpenSections[key] = false;
+  });
+  document.querySelectorAll('[id^="tg-icon-"]').forEach(el => el.className = 'fas fa-chevron-left');
+}
+
+function printTeacherGuide() {
+  const content = document.getElementById('teacher-guide-content');
+  if (!content) return;
+  const w = window.open('', '_blank');
+  w.document.write(`<html dir="rtl" lang="he"><head><title>מדריך למורה - אזרחות 2026</title>
+  <style>
+    body{font-family:Assistant,Rubik,sans-serif;padding:30px;direction:rtl;line-height:1.8;color:#1a1a2e}
+    h1{color:#0038b8;border-bottom:3px solid #0038b8;padding-bottom:10px}
+    h2{color:#0038b8;margin-top:30px;border-right:4px solid #0038b8;padding-right:12px}
+    h3{color:#1a1a2e;margin-top:20px}
+    .tg-section-content{display:block!important}
+    table{border-collapse:collapse;width:100%;margin:16px 0}
+    th,td{border:1px solid #ddd;padding:10px;text-align:right}
+    th{background:#E8F0FE;font-weight:700}
+    .tip-box{background:#FFF3CD;border:1px solid #FFC107;padding:12px;border-radius:8px;margin:12px 0}
+    .important-box{background:#FFEBEE;border:1px solid #F44336;padding:12px;border-radius:8px;margin:12px 0}
+    .success-box{background:#E8F5E9;border:1px solid #4CAF50;padding:12px;border-radius:8px;margin:12px 0}
+    ul,ol{padding-right:24px}
+    li{margin:6px 0}
+    @media print{body{font-size:12pt}h1{font-size:18pt}h2{font-size:14pt}}
+  </style></head><body>`);
+  w.document.write(content.innerHTML);
+  w.document.write('</body></html>');
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+
+function renderTeacherGuide() {
+  const unitCount = typeof UNITS_DATA !== 'undefined' ? UNITS_DATA.length : 16;
+  const questionCount = typeof getExamQuestions === 'function' ? getExamQuestions().length : 96;
+  
+  function section(id, icon, title, content, defaultOpen) {
+    const isOpen = _tgOpenSections[id] !== undefined ? _tgOpenSections[id] : (defaultOpen || false);
+    if (_tgOpenSections[id] === undefined && defaultOpen) _tgOpenSections[id] = true;
+    return `
+      <div class="tg-section">
+        <button class="tg-section-header" onclick="window.CivicsFeatures.toggleTeacherSection('${id}')" aria-expanded="${isOpen}" aria-controls="tg-section-${id}">
+          <span><i class="${icon}"></i> ${title}</span>
+          <i id="tg-icon-${id}" class="fas fa-chevron-${isOpen ? 'down' : 'left'}"></i>
+        </button>
+        <div class="tg-section-content" id="tg-section-${id}" style="display:${isOpen ? 'block' : 'none'}">
+          ${content}
+        </div>
+      </div>`;
+  }
+
+  let html = `<div class="teacher-guide-page" id="teacher-guide-content">
+    <div class="tg-hero">
+      <h1><i class="fas fa-chalkboard-teacher"></i> מדריך למורה — אזרחות 2026</h1>
+      <p class="tg-subtitle">מדריך מקיף לשימוש בפלטפורמת ההכנה לבגרות בעל-פה באזרחות</p>
+      <div class="tg-meta">
+        <span><i class="fas fa-calendar"></i> עודכן: מרץ 2026</span>
+        <span><i class="fas fa-book"></i> ${unitCount} יחידות לימוד</span>
+        <span><i class="fas fa-question-circle"></i> ${questionCount} שאלות בגרות</span>
+      </div>
+      <div class="tg-actions">
+        <button class="btn btn-primary" onclick="window.CivicsFeatures.expandAllTeacherSections()"><i class="fas fa-expand-arrows-alt"></i> פתח הכל</button>
+        <button class="btn btn-secondary" onclick="window.CivicsFeatures.collapseAllTeacherSections()"><i class="fas fa-compress-arrows-alt"></i> סגור הכל</button>
+        <button class="btn btn-success" onclick="window.CivicsFeatures.printTeacherGuide()"><i class="fas fa-print"></i> הדפסה</button>
+      </div>
+    </div>`;
+
+  // ===== Section 1: Overview =====
+  html += section('overview', 'fas fa-eye', 'סקירה כללית – מה זה אזרחות 2026?', `
+    <div class="tg-body">
+      <p><strong>אזרחות 2026</strong> היא פלטפורמה דיגיטלית אינטראקטיבית שנועדה להכין תלמידי תיכון לבחינת הבגרות <strong>בעל-פה</strong> באזרחות. הפלטפורמה מתאימה לתלמידי כיתות י'-י"ב, כולל תלמידים על הספקטרום האוטיסטי.</p>
+      <div class="success-box">💡 <strong>יתרון מרכזי:</strong> הפלטפורמה משלבת חומר לימוד, תרגול, סימולציה, ומעקב התקדמות – הכל במקום אחד, עם נגישות מלאה.</div>
+      <h3>מה כלול בפלטפורמה?</h3>
+      <ul>
+        <li>📚 <strong>${unitCount} יחידות לימוד</strong> – כל יחידה כוללת: סיכום, מושגי מפתח, שאלות תרגול, טבלאות השוואה, דוגמאות</li>
+        <li>📝 <strong>${questionCount} שאלות בגרות אמיתיות</strong> – מתוך בחינות 2024-2026, מסווגות לפי יחידה</li>
+        <li>🎯 <strong>סימולציית בחינה</strong> – חוויה מלאה של בחינת בגרות בעל-פה עם טיימר</li>
+        <li>📊 <strong>דשבורד מורה</strong> – מעקב התקדמות לכל תלמיד עם ייצוא נתונים</li>
+        <li>🧠 <strong>כלי עזר:</strong> ציר זמן, ראשי תיבות, כללי הזהב, תרגיל נשימה</li>
+        <li>♿ <strong>נגישות מלאה:</strong> TTS (הקראה), מצב רגוע, גופן גדול, ניגודיות גבוהה</li>
+      </ul>
+    </div>`, true);
+
+  // ===== Section 2: Getting Started =====
+  html += section('getting-started', 'fas fa-play-circle', 'תחילת עבודה – איך מתחילים?', `
+    <div class="tg-body">
+      <h3>🔗 כניסה לאתר</h3>
+      <p>הפלטפורמה זמינה בכתובת: <a href="https://civics2026.pages.dev" target="_blank" class="tg-link">https://civics2026.pages.dev</a></p>
+      <p>אין צורך בהרשמה או התקנה – האתר עובד ישירות מהדפדפן.</p>
+      
+      <h3>📱 הנחיות לתלמידים – שלב ראשון</h3>
+      <ol>
+        <li>פתחו את הדפדפן והקלידו את כתובת האתר</li>
+        <li>בחלון שייפתח, הזינו <strong>שם מלא</strong> (חשוב למעקב ההתקדמות)</li>
+        <li>התחילו מ<strong>דף הבית</strong> ולחצו על יחידה 1</li>
+        <li>עברו על ה<strong>סיכום</strong>, ואז על <strong>מושגי המפתח</strong></li>
+        <li>עברו לטאב <strong>"שאלות"</strong> כדי לתרגל</li>
+      </ol>
+      
+      <div class="tip-box">💡 <strong>טיפ:</strong> מומלץ שהתלמידים יוסיפו את האתר ל"מסך הבית" בטלפון כדי לגשת בקלות.</div>
+      
+      <h3>🔐 כניסה לדשבורד מורה</h3>
+      <ol>
+        <li>בתפריט הצד, לחצו על <strong>"דשבורד מורה"</strong></li>
+        <li>הזינו את הסיסמה (ברירת מחדל: <code>1234</code>)</li>
+        <li>לאחר הכניסה, תוכלו לשנות את הסיסמה</li>
+      </ol>
+      <div class="important-box">⚠️ <strong>חשוב:</strong> שנו את הסיסמה מיד לאחר הכניסה הראשונה כדי למנוע גישה לא מורשית.</div>
+    </div>`);
+
+  // ===== Section 3: Platform Structure =====
+  html += section('structure', 'fas fa-sitemap', 'מבנה הפלטפורמה – עמודים ותכונות', `
+    <div class="tg-body">
+      <table class="tg-table">
+        <thead>
+          <tr><th>עמוד</th><th>כתובת</th><th>תיאור</th><th>שימוש מומלץ</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>🏠 דף הבית</td><td>#</td><td>סקירת כל היחידות עם אחוזי התקדמות</td><td>מבט כללי, בחירת יחידה</td></tr>
+          <tr><td>📚 יחידת לימוד</td><td>#unit/1-16</td><td>סיכום, מושגים, שאלות, דוגמאות</td><td>לימוד שוטף בכיתה/בבית</td></tr>
+          <tr><td>📝 שאלות בגרות</td><td>#questions</td><td>כל 96 השאלות עם סינון לפי יחידה ומבחן</td><td>סקירת שאלות</td></tr>
+          <tr><td>✏️ תרגול שאלות</td><td>#question-list</td><td>תרגול אינטראקטיבי עם רמזים ותשובות</td><td>תרגול עצמאי / שיעורי בית</td></tr>
+          <tr><td>🎯 סימולציית בחינה</td><td>#exam-sim</td><td>סימולציה מלאה עם הגרלת שאלות וטיימר</td><td>הכנה סופית לפני הבחינה</td></tr>
+          <tr><td>⏳ ציר זמן</td><td>#timeline</td><td>אירועים מרכזיים 1897-1948</td><td>חזרה על רקע היסטורי</td></tr>
+          <tr><td>📖 ראשי תיבות</td><td>#acronyms</td><td>מילון ראשי תיבות באזרחות</td><td>עזר לשינון מהיר</td></tr>
+          <tr><td>⭐ כללי הזהב</td><td>#tips</td><td>7 טיפים מנצחים לבחינה בע"פ</td><td>הנחיות לפני הבחינה</td></tr>
+          <tr><td>📖 חומר מיקוד</td><td>#mikud</td><td>תוכן מיקוד מלא ב-16 יחידות</td><td>חזרה מעמיקה</td></tr>
+          <tr><td>📊 ההתקדמות שלי</td><td>#student-progress</td><td>דשבורד אישי לתלמיד</td><td>מעקב עצמי</td></tr>
+          <tr><td>📊 דשבורד מורה</td><td>#dashboard</td><td>מעקב התקדמות כל התלמידים</td><td>ניהול כיתה</td></tr>
+          <tr><td>🧘 תרגיל נשימה</td><td>#breathing</td><td>תרגיל נשימה 4-7-8 להרגעה</td><td>לפני בחינה / מצב לחץ</td></tr>
+          <tr><td>📖 מדריך למורה</td><td>#teacher-guide</td><td>המדריך הנוכחי</td><td>הנחיות לשימוש</td></tr>
+        </tbody>
+      </table>
+    </div>`);
+
+  // ===== Section 4: Teaching Methods =====
+  html += section('teaching', 'fas fa-graduation-cap', 'שיטות הוראה מומלצות', `
+    <div class="tg-body">
+      <h3>🎯 מתכונת שיעור 45 דקות</h3>
+      <p>ניתן להשתמש ב<strong>מחולל מתווה השיעור</strong> (בדשבורד מורה) ליצירת מתווה אוטומטי, או להשתמש במבנה הבא:</p>
+      <table class="tg-table">
+        <thead><tr><th>שלב</th><th>זמן</th><th>פעילות</th><th>שימוש בפלטפורמה</th></tr></thead>
+        <tbody>
+          <tr><td>1. פתיחה</td><td>7 דק'</td><td>סקירה + שאלה מנחה</td><td>הצגת סיכום היחידה על המסך</td></tr>
+          <tr><td>2. הקנייה</td><td>12 דק'</td><td>הצגת מושגים חדשים</td><td>עבודה עם טאב "למד" - מושגי מפתח</td></tr>
+          <tr><td>3. תרגול</td><td>18 דק'</td><td>תרגול שאלות בגרות</td><td>טאב "שאלות" + פיגומים</td></tr>
+          <tr><td>4. סיכום</td><td>8 דק'</td><td>חזרה + שאלה מסכמת</td><td>טבלת השוואה / ציר זמן</td></tr>
+        </tbody>
+      </table>
+
+      <h3>📋 תרחישי שימוש בכיתה</h3>
+      <div class="tg-scenario">
+        <h4>🔹 תרחיש א': שיעור פרונטלי עם הקרנה</h4>
+        <ul>
+          <li>הקרינו את העמוד על הלוח החכם</li>
+          <li>עברו על סיכום היחידה יחד עם הכיתה</li>
+          <li>הציגו את מושגי המפתח אחד-אחד</li>
+          <li>בקשו מתלמידים לענות בעל-פה על שאלות מהטאב</li>
+        </ul>
+      </div>
+      <div class="tg-scenario">
+        <h4>🔹 תרחיש ב': עבודה עצמאית בכיתת מחשבים</h4>
+        <ul>
+          <li>כל תלמיד פותח את האתר במחשב / בטלפון</li>
+          <li>תנו משימה: "עברו על יחידה X, ענו על 3 שאלות"</li>
+          <li>השתמשו בדשבורד מורה לבדיקת התקדמות בזמן אמת</li>
+          <li>לסיום – דיון כיתתי על שאלה מרכזית</li>
+        </ul>
+      </div>
+      <div class="tg-scenario">
+        <h4>🔹 תרחיש ג': שיעורי בית ולמידה עצמאית</h4>
+        <ul>
+          <li>תנו משימה: "השלימו יחידה X עד 100%"</li>
+          <li>בדקו בדשבורד מורה שהתלמידים השלימו</li>
+          <li>בשיעור הבא, דונו בשאלות שהתקשו בהן</li>
+        </ul>
+      </div>
+
+      <h3>🧩 עבודה עם הפיגומים (Scaffolding)</h3>
+      <p>מערכת הפיגומים מדריכה תלמידים בבניית תשובה איכותית:</p>
+      <ol>
+        <li><strong>רמה 1 – פירוק השאלה:</strong> רשימת בדיקה של מה צריך לכלול בתשובה</li>
+        <li><strong>רמה 2 – תבנית מובנית:</strong> מבנה כתיבה מוכן למילוי</li>
+        <li><strong>רמה 3 – דוגמת תשובה:</strong> תשובה לדוגמה מלאה</li>
+      </ol>
+      <div class="tip-box">💡 <strong>טיפ:</strong> עודדו תלמידים להשתמש ברמה 1 בלבד ולנסות לבנות תשובה עצמאית לפני שצופים בדוגמה.</div>
+    </div>`);
+
+  // ===== Section 5: Exam Preparation =====
+  html += section('exam-prep', 'fas fa-clipboard-check', 'הכנה לבחינה – לוח זמנים מומלץ', `
+    <div class="tg-body">
+      <h3>📅 תכנית הכנה ב-4 שבועות</h3>
+      <table class="tg-table">
+        <thead><tr><th>שבוע</th><th>מטרה</th><th>פעילות</th><th>יעד התקדמות</th></tr></thead>
+        <tbody>
+          <tr><td><strong>שבוע 1</strong></td><td>יסודות</td><td>יחידות 1-4: סיכום + מושגים + 2 שאלות ליחידה</td><td>25%</td></tr>
+          <tr><td><strong>שבוע 2</strong></td><td>דמוקרטיה</td><td>יחידות 5-9: סיכום + מושגים + 3 שאלות ליחידה</td><td>50%</td></tr>
+          <tr><td><strong>שבוע 3</strong></td><td>מוסדות ושלטון</td><td>יחידות 10-12: סיכום + כל השאלות</td><td>75%</td></tr>
+          <tr><td><strong>שבוע 4</strong></td><td>חזרה וסימולציה</td><td>סימולציות בחינה + חזרה ממוקדת על חולשות</td><td>100%</td></tr>
+        </tbody>
+      </table>
+
+      <h3>🎯 הכנה אינטנסיבית – שבוע לפני הבחינה</h3>
+      <table class="tg-table">
+        <thead><tr><th>יום</th><th>פעילות</th><th>כלי בפלטפורמה</th></tr></thead>
+        <tbody>
+          <tr><td>ראשון</td><td>חזרה על יחידות 1-4</td><td>טאב "למד" + מושגי מפתח</td></tr>
+          <tr><td>שני</td><td>חזרה על יחידות 5-8</td><td>שאלות תרגול + פיגומים</td></tr>
+          <tr><td>שלישי</td><td>חזרה על יחידות 9-12</td><td>טבלאות השוואה + דוגמאות</td></tr>
+          <tr><td>רביעי</td><td>סימולציית בחינה #1</td><td>סימולציית בחינה + טיימר</td></tr>
+          <tr><td>חמישי</td><td>סימולציית בחינה #2 + חזרה</td><td>סימולציה + חומר מיקוד</td></tr>
+          <tr><td>שישי</td><td>חזרה קלה + 7 כללי הזהב</td><td>טיפים + תרגיל נשימה</td></tr>
+          <tr><td>שבת</td><td>מנוחה + תרגיל נשימה</td><td>תרגיל נשימה 4-7-8</td></tr>
+        </tbody>
+      </table>
+
+      <div class="success-box">✅ <strong>מטרה:</strong> תלמיד שעבד על כל 96 השאלות וביצע לפחות 3 סימולציות מלאות – מוכן לבחינה!</div>
+    </div>`);
+
+  // ===== Section 6: Dashboard Guide =====
+  html += section('dashboard-guide', 'fas fa-tachometer-alt', 'שימוש בדשבורד מורה', `
+    <div class="tg-body">
+      <h3>📊 מה מציג הדשבורד?</h3>
+      <ul>
+        <li><strong>מספר תלמידים מסונכרנים</strong> – כל מי שהזין שם ועבד לפחות פעם</li>
+        <li><strong>ממוצע התקדמות</strong> – אחוז ממוצע מתוך כל היחידות</li>
+        <li><strong>סה"כ תשובות</strong> – מספר תשובות שנכתבו</li>
+        <li><strong>טבלת תלמידים</strong> – כל תלמיד עם פירוט מלא</li>
+      </ul>
+
+      <h3>🔍 מה לחפש?</h3>
+      <table class="tg-table">
+        <thead><tr><th>סימן</th><th>משמעות</th><th>פעולה מומלצת</th></tr></thead>
+        <tbody>
+          <tr><td>🟢 התקדמות 70%+</td><td>תלמיד עובד היטב</td><td>עידוד, סימולציות</td></tr>
+          <tr><td>🟡 התקדמות 30-69%</td><td>תלמיד בתהליך</td><td>בדיקה שעובד על כל היחידות</td></tr>
+          <tr><td>🔴 התקדמות מתחת ל-30%</td><td>צריך תשומת לב</td><td>שיחה אישית, התאמת משימות</td></tr>
+          <tr><td>😟 מצב רוח "לחוץ"</td><td>תלמיד בלחץ</td><td>הכוונה לתרגיל נשימה, הפחתת עומס</td></tr>
+          <tr><td>📝 0 תשובות</td><td>תלמיד לא מתרגל</td><td>שיחה + משימות ממוקדות</td></tr>
+        </tbody>
+      </table>
+
+      <h3>📤 ייצוא נתונים</h3>
+      <p>לחצו <strong>"ייצוא כל התלמידים"</strong> כדי להוריד קובץ JSON עם כל הנתונים. קובץ זה כולל:</p>
+      <ul>
+        <li>שם כל תלמיד + תאריך עדכון אחרון</li>
+        <li>התקדמות לפי יחידה (צ'קליסט)</li>
+        <li>תשובות שנכתבו לכל שאלה</li>
+        <li>מצב רוח לכל יחידה</li>
+        <li>פתקים והדגשות</li>
+      </ul>
+
+      <h3>📋 תכנון שיעור</h3>
+      <p>מחולל מתווה השיעור בדשבורד יוצר מתווה מובנה של 45 דקות ב-4 שלבים:</p>
+      <ol>
+        <li>בחרו יחידה מהרשימה</li>
+        <li>לחצו <strong>"צור מתווה שיעור"</strong></li>
+        <li>המתווה יכלול: פתיחה, הקנייה, תרגול, סיכום</li>
+        <li>לחצו <strong>"הדפס"</strong> כדי לקבל עותק להדפסה</li>
+      </ol>
+    </div>`);
+
+  // ===== Section 7: Accessibility =====
+  html += section('accessibility', 'fas fa-universal-access', 'נגישות והתאמות לתלמידים על הספקטרום', `
+    <div class="tg-body">
+      <h3>♿ תכונות נגישות מובנות</h3>
+      <table class="tg-table">
+        <thead><tr><th>תכונה</th><th>מה עושה</th><th>איך מפעילים</th></tr></thead>
+        <tbody>
+          <tr><td>🔊 הקראה (TTS)</td><td>קורא בקול כל טקסט</td><td>לחצן 🔊 ליד כל קטע</td></tr>
+          <tr><td>🅰️ גודל גופן</td><td>מגדיל את הטקסט</td><td>כפתור נגישות (♿) > גודל גופן</td></tr>
+          <tr><td>🌓 ניגודיות גבוהה</td><td>רקע כהה + טקסט בהיר</td><td>כפתור נגישות > ניגודיות</td></tr>
+          <tr><td>🧘 מצב רגוע</td><td>מפחית אנימציות וצבעים</td><td>כפתור נגישות > מצב רגוע</td></tr>
+          <tr><td>🖼️ הסתרת תמונות</td><td>מסיר תמונות מוסחות</td><td>כפתור נגישות > הסתר תמונות</td></tr>
+          <tr><td>⏸️ הפסקה</td><td>הקפאת כל הטיימרים ומעבר למסך רגוע</td><td>כפתור ⏸️ (תמיד נראה)</td></tr>
+          <tr><td>🧠 תרגיל נשימה</td><td>טכניקת 4-7-8 להרגעה</td><td>תפריט > תרגיל נשימה</td></tr>
+          <tr><td>⌨️ ניווט מקלדת</td><td>ניווט מלא ללא עכבר</td><td>Tab, Enter, Escape</td></tr>
+        </tbody>
+      </table>
+
+      <h3>🎯 המלצות לתלמידים על הספקטרום</h3>
+      <ul>
+        <li><strong>הפעילו מצב רגוע</strong> – מפחית גירויים חזותיים</li>
+        <li><strong>השתמשו בטיימר</strong> – מסייע למיקוד (פומודורו 25 דק')</li>
+        <li><strong>למדו בחלקים קטנים</strong> – יחידה אחת בכל פעם, עם הפסקות</li>
+        <li><strong>השתמשו בפיגומים</strong> – מבנה ברור עוזר לתלמידים שצריכים מסגרת</li>
+        <li><strong>תרגיל נשימה לפני בחינה</strong> – 3-4 סבבים של 4-7-8</li>
+      </ul>
+
+      <div class="important-box">⚠️ <strong>שימו לב:</strong> הודעות קוליות (TTS) עלולות להפריע בכיתה. ודאו שתלמידים משתמשים באוזניות.</div>
+    </div>`);
+
+  // ===== Section 8: Curriculum Mapping =====
+  html += section('curriculum', 'fas fa-map', 'מיפוי תכנית הלימודים', `
+    <div class="tg-body">
+      <h3>📋 יחידות הלימוד וחלוקה לשלבים</h3>
+      <table class="tg-table">
+        <thead><tr><th>שלב</th><th>יחידות</th><th>נושאים מרכזיים</th><th>שעות מומלצות</th></tr></thead>
+        <tbody>
+          <tr><td>שלב א' – יסודות</td><td>1-6</td><td>רקע היסטורי, הכרזת העצמאות, לאום, יהודית, מיעוטים, תפוצות</td><td>12 שעות</td></tr>
+          <tr><td>שלב ב' – דמוקרטיה</td><td>7-10</td><td>עקרונות דמוקרטיה, זכויות, חוקי יסוד, כלכלה-חברה</td><td>10 שעות</td></tr>
+          <tr><td>שלב ג' – מוסדות</td><td>11-13</td><td>שלוש רשויות, פיקוח, בחירות</td><td>8 שעות</td></tr>
+          <tr><td>שלב ד' – חברה</td><td>14-16</td><td>תקשורת, מעורבות, אינטגרציה</td><td>6 שעות</td></tr>
+        </tbody>
+      </table>
+
+      <div class="important-box">⚠️ <strong>שימו לב:</strong> יחידות 13-15 מסומנות כ"לא במיקוד תשפ"ז". ודאו מול המסמך הרשמי לפני ההוראה.</div>
+
+      <h3>📊 חלוקת שאלות בגרות לפי יחידה</h3>
+      <p>ניתן לראות כמה שאלות בגרות שייכות לכל יחידה בטאב <strong>"שאלות בגרות"</strong> בעמוד הראשי. מומלץ להתמקד ביחידות עם הכי הרבה שאלות.</p>
+    </div>`);
+
+  // ===== Section 9: Troubleshooting =====
+  html += section('troubleshooting', 'fas fa-tools', 'פתרון בעיות נפוצות', `
+    <div class="tg-body">
+      <table class="tg-table">
+        <thead><tr><th>בעיה</th><th>סיבה אפשרית</th><th>פתרון</th></tr></thead>
+        <tbody>
+          <tr><td>האתר לא נטען</td><td>בעיית רשת / קאש</td><td>נסו Ctrl+Shift+R לרענון מלא</td></tr>
+          <tr><td>ההתקדמות לא נשמרת</td><td>localStorage מלא או חסום</td><td>ודאו שקוקיז מופעלים בדפדפן</td></tr>
+          <tr><td>דשבורד ריק</td><td>תלמידים לא הזינו שם</td><td>בקשו מתלמידים להזין שם ולרענן</td></tr>
+          <tr><td>הקראה לא עובדת</td><td>TTS לא נתמך בדפדפן</td><td>השתמשו ב-Chrome או Edge</td></tr>
+          <tr><td>שאלות לא מופיעות</td><td>קובץ שאלות לא נטען</td><td>רעננו את הדף. אם לא עוזר – בדקו קונסול</td></tr>
+          <tr><td>גופן קטן מדי</td><td>ברירת מחדל של הדפדפן</td><td>כפתור ♿ > גודל גופן > גדול</td></tr>
+          <tr><td>נתונים לא מסתנכרנים</td><td>בעיית חיבור לשרת</td><td>בדקו חיבור אינטרנט + רעננו דשבורד</td></tr>
+        </tbody>
+      </table>
+
+      <h3>📞 תמיכה טכנית</h3>
+      <p>לבעיות שלא נפתרות, פנו למנהל הפרויקט:</p>
+      <ul>
+        <li>📧 דרך מנהל מערכת בית הספר</li>
+        <li>🔗 GitHub: <a href="https://github.com/avihaik-source/civics2026" target="_blank" class="tg-link">github.com/avihaik-source/civics2026</a></li>
+      </ul>
+    </div>`);
+
+  // ===== Section 10: Quick Reference =====
+  html += section('quick-ref', 'fas fa-bookmark', 'כרטיס עזר מהיר (להדפסה)', `
+    <div class="tg-body tg-quick-ref">
+      <div class="tg-ref-grid">
+        <div class="tg-ref-card">
+          <h4>🔗 כתובות חשובות</h4>
+          <ul>
+            <li><strong>אתר:</strong> <a href="https://civics2026.pages.dev" target="_blank" class="tg-link">civics2026.pages.dev</a></li>
+            <li><strong>שאלות:</strong> civics2026.pages.dev/#questions</li>
+            <li><strong>תרגול:</strong> civics2026.pages.dev/#question-list</li>
+            <li><strong>דשבורד:</strong> civics2026.pages.dev/#dashboard</li>
+          </ul>
+        </div>
+        <div class="tg-ref-card">
+          <h4>⌨️ קיצורי מקלדת</h4>
+          <ul>
+            <li><code>Alt+P</code> – הפסקה / המשך</li>
+            <li><code>Alt+A</code> – נגישות</li>
+            <li><code>Escape</code> – סגור תפריט / פאנל</li>
+            <li><code>Tab</code> – ניווט בין אלמנטים</li>
+          </ul>
+        </div>
+        <div class="tg-ref-card">
+          <h4>📊 נתוני הפלטפורמה</h4>
+          <ul>
+            <li><strong>${unitCount}</strong> יחידות לימוד</li>
+            <li><strong>${questionCount}</strong> שאלות בגרות</li>
+            <li><strong>63</strong> שאלות תרגול</li>
+            <li><strong>248</strong> מושגי מפתח</li>
+          </ul>
+        </div>
+        <div class="tg-ref-card">
+          <h4>🎯 טיפים לתלמידים</h4>
+          <ul>
+            <li>התחילו ביחידות 1-4</li>
+            <li>ענו על שאלות <strong>בכתב</strong></li>
+            <li>השתמשו בפיגומים</li>
+            <li>עשו סימולציה לפני בחינה</li>
+          </ul>
+        </div>
+      </div>
+    </div>`);
+
+  html += `</div>`;
+  return html;
+}
+
 // ===== NAVIGATION INTEGRATION =====
 // These functions are called from the modified routing in app.js
 function getPageRenderer(page, param) {
@@ -837,6 +1246,7 @@ function getPageRenderer(page, param) {
     case 'about': return renderAboutPage();
     case 'student-progress': return renderProgressDashboard();
     case 'mikud': return renderMikudPage();
+    case 'teacher-guide': return renderTeacherGuide();
     default: return null;
   }
 }
@@ -853,6 +1263,11 @@ window.CivicsFeatures = {
   renderTipsPage,
   renderAboutPage,
   renderProgressDashboard,
+  renderTeacherGuide,
+  toggleTeacherSection,
+  expandAllTeacherSections,
+  collapseAllTeacherSections,
+  printTeacherGuide,
   goToQuestion,
   showPracticeHint,
   showPracticeAnswer,

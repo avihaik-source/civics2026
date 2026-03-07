@@ -1035,13 +1035,15 @@ function onHashChange() {
     STATE.currentPage = 'student-progress';
   } else if (hash === 'mikud') {
     STATE.currentPage = 'mikud';
+  } else if (hash === 'teacher-guide') {
+    STATE.currentPage = 'teacher-guide';
   } else {
     STATE.currentPage = 'home';
     STATE.currentUnit = null;
   }
   // Transition announcement for accessibility
   if (prevPage !== STATE.currentPage) {
-    const pageNames = {home: 'דף הבית', unit: 'יחידת לימוד', questions: 'שאלות בגרות', dashboard: 'לוח מחוונים', 'exam-sim': 'סימולציית בחינה', breathing: 'תרגיל נשימה', practice: 'תרגול שאלה', 'question-list': 'רשימת שאלות לתרגול', timeline: 'ציר זמן', acronyms: 'ראשי תיבות', tips: 'כללי הזהב', about: 'אודות', 'student-progress': 'ההתקדמות שלי', mikud: 'חומר מיקוד'};
+    const pageNames = {home: 'דף הבית', unit: 'יחידת לימוד', questions: 'שאלות בגרות', dashboard: 'לוח מחוונים', 'exam-sim': 'סימולציית בחינה', breathing: 'תרגיל נשימה', practice: 'תרגול שאלה', 'question-list': 'רשימת שאלות לתרגול', timeline: 'ציר זמן', acronyms: 'ראשי תיבות', tips: 'כללי הזהב', about: 'אודות', 'student-progress': 'ההתקדמות שלי', mikud: 'חומר מיקוד', 'teacher-guide': 'מדריך למורה'};
     announceToSR('עוברים ל' + (pageNames[STATE.currentPage] || STATE.currentPage));
   }
   // Track study time for break reminders
@@ -1069,6 +1071,7 @@ function navigate(page, unitId) {
   else if (page === 'about') location.hash = 'about';
   else if (page === 'student-progress') location.hash = 'student-progress';
   else if (page === 'mikud') location.hash = 'mikud';
+  else if (page === 'teacher-guide') location.hash = 'teacher-guide';
   else location.hash = '';
 }
 
@@ -1094,7 +1097,8 @@ function render() {
     'tips': 'אזרחות 2026 - 7 כללי הזהב',
     'about': 'אזרחות 2026 - אודות',
     'student-progress': 'אזרחות 2026 - ההתקדמות שלי',
-    'mikud': 'אזרחות 2026 - חומר מיקוד'
+    'mikud': 'אזרחות 2026 - חומר מיקוד',
+    'teacher-guide': 'אזרחות 2026 - מדריך למורה'
   };
   const titleVal = titleMap[STATE.currentPage];
   document.title = typeof titleVal === 'function' ? titleVal() : (titleVal || 'אזרחות 2026');
@@ -1369,6 +1373,9 @@ function renderSidebar() {
       </a>
       <a class="sidebar-item${STATE.currentPage==='about'?' active':''}" href="#about" tabindex="0" aria-label="אודות" aria-current="${STATE.currentPage==='about'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-info-circle"></i></span> אודות
+      </a>
+      <a class="sidebar-item${STATE.currentPage==='teacher-guide'?' active':''}" href="#teacher-guide" tabindex="0" aria-label="מדריך למורה" aria-current="${STATE.currentPage==='teacher-guide'?'page':'false'}">
+        <span class="item-icon"><i class="fas fa-chalkboard-teacher"></i></span> מדריך למורה
       </a>
       <a class="sidebar-item${STATE.currentPage==='dashboard'?' active':''}" href="#dashboard" tabindex="0" aria-label="דשבורד מורה" aria-current="${STATE.currentPage==='dashboard'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-chart-bar"></i></span> דשבורד מורה
