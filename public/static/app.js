@@ -3,9 +3,13 @@
 'use strict';
 
 // ===== ENSURE EXAM_QUESTIONS EXISTS (may be loaded lazily or missing) =====
+// NOTE: questions-data.js loads async and builds window.EXAM_QUESTIONS
+// We use a getter so we always get the latest data from window.EXAM_QUESTIONS
 if (typeof window.EXAM_QUESTIONS === 'undefined') {
   window.EXAM_QUESTIONS = [];
 }
+// Use dynamic reference - always reads from window to pick up lazy-loaded data
+function getExamQuestions() { return window.EXAM_QUESTIONS || []; }
 var EXAM_QUESTIONS = window.EXAM_QUESTIONS;
 
 // ===== FORMAT DEFINITION TEXT (convert numbered lists to bullet HTML) =====
@@ -590,6 +594,11 @@ function init() {
   window.addEventListener('hashchange', onHashChange);
   onHashChange();
   loadFromServer();
+  // Listen for lazy-loaded exam questions becoming available
+  window.addEventListener('examQuestionsReady', function() {
+    console.log('[Civics2026] EXAM_QUESTIONS loaded:', getExamQuestions().length, 'questions');
+    render(); // Re-render to update counts and question displays
+  });
   // Auto-save every 30 seconds
   STATE.autoSaveInterval = setInterval(() => {
     saveState();
@@ -833,14 +842,14 @@ function predictScore() {
     const pct = getUnitProgress(u.id);
     const p = STATE.progress[u.id] || {};
     const answered = Object.keys(p.answers || {}).length;
-    const questions = EXAM_QUESTIONS.filter(q => q.unitIds.includes(u.id)).length;
+    const questions = getExamQuestions().filter(q => q.unitIds.includes(u.id)).length;
     const answerPct = questions > 0 ? answered / questions : 0;
     const mood = p.mood;
     const moodBonus = mood === 'calm' ? 1.1 : (mood === 'neutral' ? 1.0 : (mood === 'anxious' ? 0.85 : 0.9));
     
     // Scaffold usage bonus: did the student use dual-view / simplified view?
     const scaffoldUsed = Object.keys(A11Y.dualViewOpen || {}).filter(k => {
-      const q = EXAM_QUESTIONS.find(qq => String(qq.id) === k);
+      const q = getExamQuestions().find(qq => String(qq.id) === k);
       return q && q.unitIds.includes(u.id) && A11Y.dualViewOpen[k];
     }).length;
     const scaffoldBonus = questions > 0 ? Math.min(scaffoldUsed / questions, 1) * 5 : 0;
@@ -1430,7 +1439,7 @@ function renderHomePage() {
   let html = `<div class="home-page">
     <div class="home-hero" role="banner">
       <h1>🎓 מערכת הכנה לבגרות באזרחות 2026</h1>
-      <p>16 יחידות לימוד | ${EXAM_QUESTIONS.length} שאלות תרגול | 96 שאלות בגרות אמיתיות | הכנה לבחינה בעל-פה</p>
+      <p>16 יחידות לימוד | ${getExamQuestions().length} שאלות תרגול | 96 שאלות בגרות אמיתיות | הכנה לבחינה בעל-פה</p>
       <p class="hero-a11y-note"><i class="fas fa-universal-access"></i> גרסה מותאמת נגישות</p>
     </div>
 
@@ -1531,7 +1540,7 @@ function renderHomePage() {
     phase.ids.forEach(id => {
       const u = UNITS_DATA.find(x => x.id === id);
       const prog = getUnitProgress(id);
-      const qs = EXAM_QUESTIONS.filter(q => q.unitIds.includes(id)).length;
+      const qs = getExamQuestions().filter(q => q.unitIds.includes(id)).length;
       const freqClass = u.frequency.includes('גבוהה מאוד') ? 'high' : (u.excluded ? 'excluded' : '');
       const excludedClass = u.excluded ? ' excluded-unit' : '';
       const excludedBadge = u.excluded ? '<span class="excluded-badge">⚠️ לא במיקוד תשפ"ה</span>' : '';
@@ -1584,7 +1593,7 @@ function renderHomePage() {
 function renderUnitPage() {
   const unit = UNITS_DATA.find(u => u.id === STATE.currentUnit);
   if (!unit) return '<div class="empty-state"><div class="icon">🤷</div><p>יחידה לא נמצאה</p></div>';
-  const questions = EXAM_QUESTIONS.filter(q => q.unitIds.includes(unit.id));
+  const questions = getExamQuestions().filter(q => q.unitIds.includes(unit.id));
   const tabs = [
     { id: 'learn', label: '📖 לימוד', icon: 'book' },
     { id: 'practice', label: '📝 תרגול', icon: 'pen', badge: questions.length },
@@ -3081,7 +3090,7 @@ function renderDashboard() {
       html += `<tr>
         <td><strong>${esc(s.studentName || 'ללא שם')}</strong></td>
         <td><div class="progress-bar-container" style="height:14px" role="progressbar" aria-valuenow="${pct}"><div class="progress-bar-fill" style="width:${pct}%;font-size:10px">${pct}%</div></div></td>
-        <td>${answered}/${EXAM_QUESTIONS.length}</td>
+        <td>${answered}/${getExamQuestions().length}</td>
         <td style="font-size:12px">${lastUpdate}</td>
         <td><button class="btn btn-sm btn-primary" onclick="window.CivicsApp.showStudentDetail(${idx})" aria-label="הצג פרטי תלמיד"><i class="fas fa-eye"></i></button></td>
       </tr>`;
@@ -3114,7 +3123,7 @@ function renderStudentDetail(student) {
   UNITS_DATA.forEach(u => {
     const p = progress[u.id] || {};
     const pct = getUnitProgressFrom(u.id, progress);
-    const totalQs = EXAM_QUESTIONS.filter(q => q.unitIds.includes(u.id)).length;
+    const totalQs = getExamQuestions().filter(q => q.unitIds.includes(u.id)).length;
     const answered = Object.keys(p.answers||{}).length;
     const mood = p.mood === 'calm' ? '😊' : p.mood === 'neutral' ? '😐' : p.mood === 'anxious' ? '😟' : '-';
     html += `<tr>
@@ -3132,7 +3141,7 @@ function renderStudentDetail(student) {
   Object.entries(progress).forEach(([unitId, p]) => {
     Object.entries(p.answers||{}).forEach(([qId, ans]) => {
       if (ans && ans.trim()) {
-        const q = EXAM_QUESTIONS.find(x => x.id === qId);
+        const q = getExamQuestions().find(x => x.id === qId);
         allAnswers.push({ qId, question: q ? q.question : qId, answer: ans, exam: q ? q.exam : '' });
       }
     });
@@ -3199,7 +3208,7 @@ function tickTimer() {
 
 // ===== EXAM SIM =====
 function startExamSim() {
-  const activeQuestions = EXAM_QUESTIONS.filter(q => {
+  const activeQuestions = getExamQuestions().filter(q => {
     return !q.unitIds.some(uid => {
       const unit = UNITS_DATA.find(u => u.id === uid);
       return unit && unit.excluded;
@@ -3678,7 +3687,7 @@ function generateLesson() {
   if (!unit) return;
   const concepts = unit.concepts || [];
   const checklist = unit.checklist || [];
-  const examQs = (typeof EXAM_QUESTIONS !== 'undefined' ? EXAM_QUESTIONS : []).filter(q => q.unitIds && q.unitIds.includes(unitId));
+  const examQs = getExamQuestions().filter(q => q.unitIds && q.unitIds.includes(unitId));
   const keyTerms = concepts.slice(0, 5).map(c => c.term || c.name || '').filter(Boolean);
   const firstQ = examQs.length > 0 ? examQs[0] : null;
   const lessonHtml = '<div class="lesson-plan" dir="rtl">'
@@ -3848,6 +3857,8 @@ window.CivicsApp = {
   generateLesson, printLesson, copyLesson,
   toggleHighlight, clearHighlights, resetTeacherPassword,
   selectPracticeOption, showPracticeAnswer, toggleKeyConcept,
+  // Callback when exam questions are lazy-loaded
+  _onExamQuestionsLoaded() { render(); },
   // Exam questions API
   setQExam(idx) { _questionsState.currentExam = idx; _questionsState.expandedQuestion = null; _questionsState.filterUnit = 0; render(); },
   setQSearch(q) { _questionsState.searchQuery = q; _questionsState.expandedQuestion = null; render(); setTimeout(() => { const el = document.getElementById('q-search-input'); if (el) { el.focus(); el.value = q; } }, 50); },
