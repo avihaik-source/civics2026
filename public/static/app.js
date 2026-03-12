@@ -66,11 +66,11 @@ const A11Y = {
   theme: 'light',        // light, dark, soft
   fontSize: 100,          // 100-200 %
   fontType: 'sans',       // sans, serif, mono
-  quietMode: false,       // mute all sounds/animations
+  quietMode: true,        // mute all sounds/animations (ASD default: on)
   paused: false,          // pause button active
   hideTimers: false,      // hide timer elements
   hideImages: false,      // hide decorative images
-  reducedMotion: false,   // reduce animations
+  reducedMotion: true,    // reduce animations (ASD default: on)
   ttsEnabled: false,      // text-to-speech
   chunkSize: 5,           // concepts per page (7±2 rule)
   chunkPage: {},          // unitId -> current chunk page
@@ -587,6 +587,11 @@ function init() {
   // Apply minimal mode if saved
   if (A11Y.minimalMode) document.documentElement.classList.add('minimal-mode');
   if (A11Y.hideImages) document.documentElement.classList.add('hide-images');
+  // Restore text size preference
+  try {
+    const savedTextSize = localStorage.getItem('civics2026_textSize');
+    if (savedTextSize) { STATE.textSize = savedTextSize; setTextSize(savedTextSize); }
+  } catch(e) {}
   checkDailyGoal();
   STATE.studyStartTime = Date.now();
   setupOfflineDetection();
@@ -1037,13 +1042,15 @@ function onHashChange() {
     STATE.currentPage = 'mikud';
   } else if (hash === 'teacher-guide') {
     STATE.currentPage = 'teacher-guide';
+  } else if (hash === 'comparison-tables') {
+    STATE.currentPage = 'comparison-tables';
   } else {
     STATE.currentPage = 'home';
     STATE.currentUnit = null;
   }
   // Transition announcement for accessibility
   if (prevPage !== STATE.currentPage) {
-    const pageNames = {home: 'דף הבית', unit: 'יחידת לימוד', questions: 'שאלות בגרות', dashboard: 'לוח מחוונים', 'exam-sim': 'סימולציית בחינה', breathing: 'תרגיל נשימה', practice: 'תרגול שאלה', 'question-list': 'רשימת שאלות לתרגול', timeline: 'ציר זמן', acronyms: 'ראשי תיבות', tips: 'כללי הזהב', about: 'אודות', 'student-progress': 'ההתקדמות שלי', mikud: 'חומר מיקוד', 'teacher-guide': 'מדריך למורה'};
+    const pageNames = {home: 'דף הבית', unit: 'יחידת לימוד', questions: 'שאלות בגרות', dashboard: 'לוח מחוונים', 'exam-sim': 'סימולציית בחינה', breathing: 'תרגיל נשימה', practice: 'תרגול שאלה', 'question-list': 'רשימת שאלות לתרגול', timeline: 'ציר זמן', acronyms: 'ראשי תיבות', tips: 'כללי הזהב', about: 'אודות', 'student-progress': 'ההתקדמות שלי', mikud: 'חומר מיקוד', 'teacher-guide': 'מדריך למורה', 'comparison-tables': 'טבלאות השוואה'};
     announceToSR('עוברים ל' + (pageNames[STATE.currentPage] || STATE.currentPage));
   }
   // Track study time for break reminders
@@ -1072,6 +1079,7 @@ function navigate(page, unitId) {
   else if (page === 'student-progress') location.hash = 'student-progress';
   else if (page === 'mikud') location.hash = 'mikud';
   else if (page === 'teacher-guide') location.hash = 'teacher-guide';
+  else if (page === 'comparison-tables') location.hash = 'comparison-tables';
   else location.hash = '';
 }
 
@@ -1098,7 +1106,8 @@ function render() {
     'about': 'אזרחות 2026 - אודות',
     'student-progress': 'אזרחות 2026 - ההתקדמות שלי',
     'mikud': 'אזרחות 2026 - חומר מיקוד',
-    'teacher-guide': 'אזרחות 2026 - מדריך למורה'
+    'teacher-guide': 'אזרחות 2026 - מדריך למורה',
+    'comparison-tables': 'אזרחות 2026 - טבלאות השוואה'
   };
   const titleVal = titleMap[STATE.currentPage];
   document.title = typeof titleVal === 'function' ? titleVal() : (titleVal || 'אזרחות 2026');
@@ -1120,6 +1129,7 @@ function renderLayout() {
     <button class="sidebar-toggle" onclick="window.CivicsApp.toggleSidebar()" aria-label="${STATE.sidebarOpen ? 'סגור תפריט' : 'פתח תפריט'}" aria-expanded="${STATE.sidebarOpen}" tabindex="0"><i class="fas fa-bars"></i></button>
     ${renderPauseButton()}
     ${renderA11yToggle()}
+    ${renderTextSizeControl()}
     <div class="layout">
       ${renderSidebar()}
       <main class="main-content" role="main" id="main-content" tabindex="-1">
@@ -1150,6 +1160,25 @@ function renderA11yToggle() {
   return `<button class="a11y-fab" onclick="window.CivicsApp.toggleA11yPanel()" aria-label="הגדרות נגישות" tabindex="0" title="נגישות (Alt+A)">
     <i class="fas fa-universal-access"></i>
   </button>`;
+}
+
+// ===== TEXT SIZE CONTROL (A-/A/A+) =====
+function renderTextSizeControl() {
+  const current = STATE.textSize || 'normal';
+  return `<div class="text-size-control" role="group" aria-label="שליטה בגודל טקסט">
+    <button onclick="window.CivicsApp.setTextSize('small')" aria-label="הקטנת טקסט" title="הקטנת טקסט"${current==='small'?' class="active"':''}>A-</button>
+    <button onclick="window.CivicsApp.setTextSize('normal')" aria-label="טקסט רגיל" title="טקסט רגיל"${current==='normal'?' class="active"':''}>A</button>
+    <button onclick="window.CivicsApp.setTextSize('large')" aria-label="הגדלת טקסט" title="הגדלת טקסט"${current==='large'?' class="active"':''}>A+</button>
+  </div>`;
+}
+
+function setTextSize(size) {
+  STATE.textSize = size;
+  document.body.classList.remove('text-size-small', 'text-size-large');
+  if (size === 'small') document.body.classList.add('text-size-small');
+  else if (size === 'large') document.body.classList.add('text-size-large');
+  try { localStorage.setItem('civics2026_textSize', size); } catch(e) {}
+  render();
 }
 
 // ===== ACCESSIBILITY PANEL =====
@@ -1226,6 +1255,11 @@ function renderA11yPanel() {
       </div>
       <div class="a11y-group">
         <label class="a11y-label">גודל גופן: <span id="font-size-val">${A11Y.fontSize}%</span></label>
+        <div class="font-presets" style="margin-bottom:8px">
+          <button class="font-preset-btn small${A11Y.fontSize<=95?' active':''}" onclick="window.CivicsApp.setFontSize(90)" aria-label="גופן קטן">A</button>
+          <button class="font-preset-btn medium${A11Y.fontSize>95&&A11Y.fontSize<=105?' active':''}" onclick="window.CivicsApp.setFontSize(100)" aria-label="גופן בינוני">A</button>
+          <button class="font-preset-btn large${A11Y.fontSize>105?' active':''}" onclick="window.CivicsApp.setFontSize(120)" aria-label="גופן גדול">A</button>
+        </div>
         <div class="a11y-font-controls">
           <button class="btn btn-sm" onclick="window.CivicsApp.setFontSize(${A11Y.fontSize - 10})" aria-label="הקטן">א-</button>
           <input type="range" min="100" max="200" step="10" value="${A11Y.fontSize}" onchange="window.CivicsApp.setFontSize(parseInt(this.value))" aria-label="גודל גופן">
@@ -1365,6 +1399,9 @@ function renderSidebar() {
       <a class="sidebar-item${STATE.currentPage==='mikud'?' active':''}" href="#mikud" tabindex="0" aria-label="חומר מיקוד" aria-current="${STATE.currentPage==='mikud'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-book-open"></i></span> חומר מיקוד
       </a>
+      <a class="sidebar-item${STATE.currentPage==='comparison-tables'?' active':''}" href="#comparison-tables" tabindex="0" aria-label="טבלאות השוואה" aria-current="${STATE.currentPage==='comparison-tables'?'page':'false'}">
+        <span class="item-icon"><i class="fas fa-table"></i></span> טבלאות השוואה
+      </a>
       <a class="sidebar-item${STATE.currentPage==='student-progress'?' active':''}" href="#student-progress" tabindex="0" aria-label="ההתקדמות שלי" aria-current="${STATE.currentPage==='student-progress'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-chart-pie"></i></span> ההתקדמות שלי
       </a>
@@ -1380,8 +1417,15 @@ function renderSidebar() {
       <a class="sidebar-item${STATE.currentPage==='dashboard'?' active':''}" href="#dashboard" tabindex="0" aria-label="דשבורד מורה" aria-current="${STATE.currentPage==='dashboard'?'page':'false'}">
         <span class="item-icon"><i class="fas fa-chart-bar"></i></span> דשבורד מורה
       </a>`;
-  phases.forEach(phase => {
-    html += `<div class="sidebar-section-title">${phase.name}</div>`;
+  phases.forEach((phase, phaseIdx) => {
+    const hasActive = phase.ids.some(id => STATE.currentPage === 'unit' && STATE.currentUnit === id);
+    const collapsed = !hasActive ? ' collapsed' : '';
+    html += `<div class="sidebar-section${collapsed}" id="sidebar-section-${phaseIdx}">
+      <div class="sidebar-section-toggle" onclick="window.CivicsApp.toggleSidebarSection(${phaseIdx})" role="button" aria-expanded="${!collapsed}" tabindex="0">
+        <span>${phase.name}</span>
+        <i class="fas fa-chevron-down toggle-icon"></i>
+      </div>
+      <div class="sidebar-section-items">`;
     phase.ids.forEach(id => {
       const u = UNITS_DATA.find(x => x.id === id);
       const prog = getUnitProgress(id);
@@ -1392,6 +1436,7 @@ function renderSidebar() {
         <span class="item-progress${prog===100?' done':''}">${prog}%</span>
       </a>`;
     });
+    html += `</div></div>`;
   });
   html += `</nav></aside>`;
   return html;
@@ -1404,7 +1449,7 @@ function renderTopBar() {
       const total = PHASES[STATE.timerPhase]?.duration || 1;
       timerHtml = `<div class="timer-widget" role="timer" aria-label="טיימר שיעור">
         ${renderVisualTimer(STATE.timerRemaining, total, PHASES[STATE.timerPhase]?.name || '')}
-        <button class="timer-btn" onclick="window.CivicsApp.stopTimer()" aria-label="עצור טיימר">⏸</button>
+        <button class="timer-btn" onclick="window.CivicsApp.stopTimer()" aria-label="עצור טיימר"><i class="fas fa-pause"></i> עצור</button>
       </div>`;
     } else {
       timerHtml = `<button class="btn btn-sm btn-primary" onclick="window.CivicsApp.startTimer()" aria-label="הפעל טיימר שיעור"><i class="fas fa-play"></i> טיימר שיעור</button>`;
@@ -1416,13 +1461,18 @@ function renderTopBar() {
       <label class="sr-only" for="student-name-input">שם התלמיד/ה</label>
       <input type="text" id="student-name-input" class="student-name-input" placeholder="שם התלמיד/ה" value="${esc(STATE.studentName)}"
         onchange="window.CivicsApp.setName(this.value)" aria-label="שם התלמיד/ה">
-      <select id="student-grade-select" class="student-grade-select" onchange="window.CivicsApp.setGrade(this.value)" aria-label="כיתה">
+      <select id="student-grade-select" class="student-grade-select" onchange="window.CivicsApp.setGrade(this.value)" aria-label="כיתה" style="display:none">
         <option value=""${!STATE.studentGrade ? ' selected' : ''}>כיתה...</option>
         <option value="10"${STATE.studentGrade === '10' ? ' selected' : ''}>י׳</option>
         <option value="11"${STATE.studentGrade === '11' ? ' selected' : ''}>יא׳</option>
         <option value="12"${STATE.studentGrade === '12' ? ' selected' : ''}>יב׳</option>
         <option value="other"${STATE.studentGrade === 'other' ? ' selected' : ''}>אחר</option>
       </select>
+      <div class="grade-buttons" role="radiogroup" aria-label="בחירת כיתה">
+        <button class="grade-btn${STATE.studentGrade==='10'?' active':''}" onclick="window.CivicsApp.setGrade('10')" role="radio" aria-checked="${STATE.studentGrade==='10'}">י׳</button>
+        <button class="grade-btn${STATE.studentGrade==='11'?' active':''}" onclick="window.CivicsApp.setGrade('11')" role="radio" aria-checked="${STATE.studentGrade==='11'}">יא׳</button>
+        <button class="grade-btn${STATE.studentGrade==='12'?' active':''}" onclick="window.CivicsApp.setGrade('12')" role="radio" aria-checked="${STATE.studentGrade==='12'}">יב׳</button>
+      </div>
       <span id="save-badge" class="save-badge" style="opacity:0.4" role="status" aria-live="polite">✓ נשמר</span>
       <span id="sync-badge" class="sync-badge" role="status" aria-live="polite"></span>
       <button class="btn btn-sm" style="background:var(--btn-export-bg, #e8f5e9);color:var(--btn-export-color, #2e7d32)" onclick="window.CivicsApp.exportData()" title="שמור גיבוי" aria-label="ייצוא נתונים"><i class="fas fa-download"></i></button>
@@ -1476,6 +1526,11 @@ function renderHomePage() {
         <span class="ql-icon">📚</span>
         <span class="ql-title">חומר מיקוד</span>
         <span class="ql-desc">391 סעיפים</span>
+      </a>
+      <a href="#comparison-tables" class="quick-link-card" aria-label="טבלאות השוואה">
+        <span class="ql-icon">🔄</span>
+        <span class="ql-title">טבלאות השוואה</span>
+        <span class="ql-desc">7 טבלאות מפתח</span>
       </a>
       <a href="#student-progress" class="quick-link-card" aria-label="ההתקדמות שלי">
         <span class="ql-icon">📊</span>
@@ -1718,11 +1773,110 @@ function renderLearnTab(unit) {
     <div class="chunk-info" role="status">מציג ${start+1}-${Math.min(start+chunkSize, concepts.length)} מתוך ${concepts.length} מושגים</div>`;
   
   pageItems.forEach((c, i) => {
-    html += `<div class="definition-box" tabindex="0" role="article" aria-label="מושג: ${esc(c.term)}">
-      <div class="def-title">${c.term} ${ttsBtn(c.term + '. ' + c.def, c.term)}</div>
-      <div class="def-text highlightable" data-hl-id="concept-${unit.id}-${i}">${formatDef(c.def)}</div>
-      <div class="def-source">מקור: ${c.source}</div>
-    </div>`;
+    // Check if concept has enhanced content (new rich format)
+    if (c.content && typeof c.content === 'object') {
+      const ct = c.content;
+      html += `<div class="definition-box concept-detail-page" tabindex="0" role="article" aria-label="מושג: ${esc(c.term || c.title)}">
+        <div class="def-title">${c.term || c.title} ${ttsBtn((c.term || c.title) + '. ' + (ct.definition || c.def || ''), c.term || c.title)}</div>`;
+      
+      // Definition box
+      if (ct.definition) {
+        html += `<div class="concept-definition-box"><strong>📌 הגדרה:</strong> ${ct.definition}</div>`;
+      }
+      
+      // Main point
+      if (ct.mainPoint) {
+        html += `<div class="concept-section"><h2>🔍 משמעות מרכזית</h2><p style="font-size:16px;line-height:1.8">${ct.mainPoint}</p></div>`;
+      }
+      
+      // Detailed explanation
+      if (ct.detailedExplanation && ct.detailedExplanation.length > 0) {
+        html += `<div class="concept-section"><h2>📖 הסבר מפורט</h2>`;
+        ct.detailedExplanation.forEach(p => { html += `<p style="font-size:16px;line-height:1.8;margin-bottom:12px">${p}</p>`; });
+        html += `</div>`;
+      }
+      
+      // Related concepts
+      if (ct.relatedConcepts && ct.relatedConcepts.length > 0) {
+        html += `<div class="concept-section"><h2>🔗 קונספטים קשורים</h2>`;
+        html += `<div style="display:flex;flex-direction:column;gap:8px">`;
+        ct.relatedConcepts.forEach(rc => {
+          html += `<div style="padding:10px 14px;background:var(--asd-row-alt,#F9F9F7);border-radius:6px;border-right:3px solid var(--asd-primary,#5B9AA9);font-size:16px;line-height:1.6"><strong>${esc(rc.conceptId)}</strong> — ${esc(rc.relation)}</div>`;
+        });
+        html += `</div></div>`;
+      }
+      
+      // Examples
+      if (ct.examples && ct.examples.length > 0) {
+        html += `<div class="concept-section concept-examples"><h2>🌍 דוגמאות מהחיים</h2>`;
+        ct.examples.forEach(ex => {
+          html += `<div class="concept-example-card"><h4>${esc(ex.title)}</h4><p>${ex.text}</p></div>`;
+        });
+        html += `</div>`;
+      }
+      
+      // FAQ (supports source + simplified_text for ASD simplify button)
+      if (ct.faq && ct.faq.length > 0) {
+        html += `<div class="concept-section concept-faq"><h2>❓ שאלות ותשובות</h2>`;
+        ct.faq.forEach((qa, qIdx) => {
+          const qId = `${c.id || (unit.id + '-' + i)}-q${qIdx}`;
+          html += `<div class="concept-faq-item">`;
+          html += `<div class="concept-faq-q">שאלה ${qIdx+1}: ${esc(qa.question)}</div>`;
+          if (qa.source) {
+            html += `<div class="concept-faq-source">מקור: ${esc(qa.source)}</div>`;
+          }
+          html += `<div class="concept-faq-a"><strong>תשובה:</strong> ${qa.answer}</div>`;
+          if (qa.simplified_text) {
+            html += `<button class="btn-simplify" onclick="window.CivicsApp.toggleSimplified('${qId}')" aria-expanded="false" aria-controls="simplified-${qId}">🔵 <strong>לחץ לפישוט השאלה (ASD-friendly)</strong></button>`;
+            html += `<div id="simplified-${qId}" class="simplified-question" style="display:none" role="region" aria-label="גרסה מפושטת">`;
+            html += `<p class="simplified-label">💡 <strong>גרסה פשוטה:</strong></p>`;
+            html += `<div>${qa.simplified_text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>`;
+            html += `</div>`;
+          }
+          html += `</div>`;
+        });
+        html += `</div>`;
+      }
+      
+      // Comparison Table (inline)
+      if (ct.comparisonTable && ct.comparisonTable.headers) {
+        const tbl = ct.comparisonTable;
+        html += `<div class="concept-section"><h2>📊 ${esc(tbl.title || 'טבלת השוואה')}</h2>`;
+        html += `<div class="comparison-table-wrapper"><table class="comparison-table"><thead><tr>`;
+        tbl.headers.forEach(h => { html += `<th>${esc(h)}</th>`; });
+        html += `</tr></thead><tbody>`;
+        if (tbl.rows) {
+          tbl.rows.forEach(row => {
+            html += `<tr>`;
+            row.forEach((cell, ci) => { html += ci === 0 ? `<td><strong>${esc(cell)}</strong></td>` : `<td>${esc(cell)}</td>`; });
+            html += `</tr>`;
+          });
+        }
+        html += `</tbody></table></div></div>`;
+      }
+      
+      // Key points
+      if (ct.keyPoints && ct.keyPoints.length > 0) {
+        html += `<div class="concept-key-points"><h2 style="margin-top:0">🔑 נקודות מרכזיות לזכור</h2><ul>`;
+        ct.keyPoints.forEach(kp => { html += `<li>${kp}</li>`; });
+        html += `</ul></div>`;
+      }
+      
+      // Learning tip
+      if (ct.learningTip) {
+        html += `<div class="concept-learning-tip"><h3>🎓 טיפ ללמידה${ct.learningTip.method ? ' – ' + esc(ct.learningTip.method) : ''}</h3><p>${ct.learningTip.content}</p></div>`;
+      }
+      
+      if (c.source) html += `<div class="def-source">מקור: ${c.source}</div>`;
+      html += `</div>`;
+    } else {
+      // Existing simple concept format
+      html += `<div class="definition-box" tabindex="0" role="article" aria-label="מושג: ${esc(c.term)}">
+        <div class="def-title">${c.term} ${ttsBtn(c.term + '. ' + c.def, c.term)}</div>
+        <div class="def-text highlightable" data-hl-id="concept-${unit.id}-${i}">${formatDef(c.def)}</div>
+        <div class="def-source">מקור: ${c.source}</div>
+      </div>`;
+    }
   });
   
   // Pagination
@@ -2193,9 +2347,26 @@ function renderPracticeTab(unit, questions) {
           <div class="practice-section oral-section">
             <div class="section-label"><i class="fas fa-microphone"></i> שלב 2: תשובה מלאה בעל-פה</div>
             <div class="section-desc">הקליטו את תשובתכם המלאה כולל הגדרות, ציטוטים והסברים</div>
-            <button class="btn btn-record btn-record-large" id="rec-btn-${q.id}" onclick="window.CivicsApp.toggleRecord('${q.id}')" aria-label="התחל/עצור הקלטה לשאלה ${i+1}"><i class="fas fa-microphone"></i> הקלטת תשובה מלאה בעל-פה</button>
-            <textarea id="ans-${q.id}" class="oral-textarea" placeholder="תמליל ההקלטה יופיע כאן...\nניתן גם לכתוב ידנית." aria-label="תמליל תשובה בעל-פה לשאלה ${i+1}"
-              oninput="window.CivicsApp.saveAnswer('${unit.id}','${q.id}_oral',this.value)">${esc(savedOral)}</textarea>
+            <div class="answer-mode-toggle">
+              <button class="mode-btn active" id="mode-typing-${q.id}" onclick="window.CivicsApp.switchAnswerMode('${q.id}','typing')">
+                <i class="fas fa-keyboard"></i> הקלדה
+              </button>
+              <button class="mode-btn" id="mode-recording-${q.id}" onclick="window.CivicsApp.switchAnswerMode('${q.id}','recording')">
+                <i class="fas fa-microphone"></i> הקלטה קולית
+              </button>
+            </div>
+            <div id="typing-area-${q.id}">
+              <textarea id="ans-${q.id}" class="oral-textarea" placeholder="כתבו את תשובתכם המלאה כאן..." aria-label="תשובה בכתב לשאלה ${i+1}"
+                oninput="window.CivicsApp.saveAnswer('${unit.id}','${q.id}_oral',this.value)">${esc(savedOral)}</textarea>
+            </div>
+            <div id="recording-area-${q.id}" style="display:none">
+              <div class="recording-controls">
+                <button class="btn btn-record btn-record-large" id="rec-btn-${q.id}" onclick="window.CivicsApp.toggleRecord('${q.id}')" aria-label="התחל/עצור הקלטה לשאלה ${i+1}">
+                  <i class="fas fa-microphone"></i> לחצו להתחלת הקלטה
+                </button>
+                <p class="recording-hint">הטקסט המתומלל יועבר אוטומטית לשדה הכתיבה</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -3066,6 +3237,73 @@ function renderDashboard() {
     <p style="color:var(--text-gray)">לחצו "רענן נתונים" כדי לטעון סטטיסטיקות מהשרת</p>
   </div>`;
 
+  // Chart.js – Concept distribution pie chart
+  const chartUnits = UNITS_DATA.filter(u => !u.excluded);
+  const chartLabels = chartUnits.map(u => u.title);
+  const chartData = chartUnits.map(u => (u.concepts || []).length);
+  const chartColors = ['#5B9AA9','#7BA891','#C9A66B','#C17B6F','#6B8FC9','#A97BB8','#B89A6B','#6BC9A6','#C96B8F','#8F6BC9','#C9B86B','#6BAFC9','#C96B6B','#6BC96B','#9A6BC9','#C9966B'];
+  const totalConcepts = chartData.reduce((a,b) => a+b, 0);
+  const enrichedCount = UNITS_DATA.reduce((sum, u) => sum + (u.concepts || []).filter(c => c.content && typeof c.content === 'object' && c.content.definition).length, 0);
+  
+  html += `<div class="content-section" style="margin-bottom:24px">
+    <h3><i class="fas fa-chart-pie"></i> התפלגות מושגים לפי יחידה</h3>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="dash-stat" style="flex:1;min-width:120px"><div class="stat-num">${totalConcepts}</div><div class="stat-label">סה"כ מושגים</div></div>
+      <div class="dash-stat" style="flex:1;min-width:120px"><div class="stat-num">${chartUnits.length}</div><div class="stat-label">יחידות פעילות</div></div>
+      <div class="dash-stat" style="flex:1;min-width:120px"><div class="stat-num">${enrichedCount}</div><div class="stat-label">מושגים מועשרים</div></div>
+      <div class="dash-stat" style="flex:1;min-width:120px"><div class="stat-num">${getExamQuestions().length}</div><div class="stat-label">שאלות בגרות</div></div>
+    </div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:1;min-width:280px;max-width:420px"><canvas id="concepts-pie-chart" width="400" height="400" role="img" aria-label="גרף עוגה – התפלגות מושגים"></canvas></div>
+      <div style="flex:1;min-width:250px">
+        <h4 style="margin-bottom:12px">📊 פירוט לפי יחידה:</h4>
+        <div style="max-height:360px;overflow-y:auto">
+        ${chartUnits.map((u,i) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-color)">
+          <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${chartColors[i%chartColors.length]};flex-shrink:0"></span>
+          <span style="flex:1;font-size:14px">${u.icon||''} ${u.title}</span>
+          <strong style="font-size:14px">${(u.concepts||[]).length}</strong>
+        </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // Initialize chart after render
+  setTimeout(() => {
+    const canvas = document.getElementById('concepts-pie-chart');
+    if (canvas && typeof Chart !== 'undefined') {
+      new Chart(canvas, {
+        type: 'pie',
+        data: {
+          labels: chartLabels,
+          datasets: [{
+            data: chartData,
+            backgroundColor: chartColors.slice(0, chartUnits.length),
+            borderColor: '#fff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              rtl: true,
+              textDirection: 'rtl',
+              callbacks: {
+                label: function(ctx) {
+                  const pct = Math.round(ctx.parsed / totalConcepts * 100);
+                  return ctx.label + ': ' + ctx.parsed + ' מושגים (' + pct + '%)';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }, 300);
+
   if (STATE.teacherLoading) {
     html += `<div style="text-align:center;padding:40px" role="status"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:12px">טוען נתוני תלמידים מהשרת...</p></div>`;
   } else if (students.length === 0) {
@@ -3209,7 +3447,7 @@ function tickTimer() {
   if (timerWidget) {
     const total = PHASES[STATE.timerPhase]?.duration || 1;
     timerWidget.innerHTML = renderVisualTimer(STATE.timerRemaining, total, PHASES[STATE.timerPhase]?.name || '') +
-      `<button class="timer-btn" onclick="window.CivicsApp.stopTimer()" aria-label="עצור טיימר">⏸</button>`;
+      `<button class="timer-btn" onclick="window.CivicsApp.stopTimer()" aria-label="עצור טיימר"><i class="fas fa-pause"></i> עצור</button>`;
   }
 }
 
@@ -3307,6 +3545,29 @@ function toggleRecord(qId) {
   recognition.onerror = () => { toggleRecord(qId); };
   recognition.onend = () => { if (recTarget === qId) { recTarget = null; if (btn) { btn.className = 'btn btn-record'; btn.innerHTML = '<i class="fas fa-microphone"></i> הקלטה קולית'; } } };
   recognition.start();
+}
+
+// ===== Sidebar Collapsible Sections =====
+function toggleSidebarSection(sectionId) {
+  const section = document.getElementById('sidebar-section-' + sectionId);
+  if (section) {
+    section.classList.toggle('collapsed');
+    const toggle = section.querySelector('.sidebar-section-toggle');
+    if (toggle) toggle.setAttribute('aria-expanded', !section.classList.contains('collapsed'));
+  }
+}
+
+// ===== Answer Mode Toggle (Typing/Recording) =====
+function switchAnswerMode(qId, mode) {
+  const typingBtn = document.getElementById('mode-typing-' + qId);
+  const recordingBtn = document.getElementById('mode-recording-' + qId);
+  const typingArea = document.getElementById('typing-area-' + qId);
+  const recordingArea = document.getElementById('recording-area-' + qId);
+  if (!typingBtn || !recordingBtn || !typingArea || !recordingArea) return;
+  typingBtn.classList.toggle('active', mode === 'typing');
+  recordingBtn.classList.toggle('active', mode === 'recording');
+  typingArea.style.display = mode === 'typing' ? 'block' : 'none';
+  recordingArea.style.display = mode === 'recording' ? 'block' : 'none';
 }
 
 // ===== HELPERS =====
@@ -3799,6 +4060,20 @@ document.addEventListener('mouseup', function() {
   } catch(e) {}
 });
 
+// ===== ASD SIMPLIFY TOGGLE =====
+function toggleSimplified(questionId) {
+  const el = document.getElementById('simplified-' + questionId);
+  if (!el) return;
+  const btn = el.previousElementSibling;
+  if (el.style.display === 'none' || el.style.display === '') {
+    el.style.display = 'block';
+    if (btn && btn.classList.contains('btn-simplify')) btn.setAttribute('aria-expanded', 'true');
+  } else {
+    el.style.display = 'none';
+    if (btn && btn.classList.contains('btn-simplify')) btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
 // ===== PHASE 3: TEACHER PASSWORD RESET =====
 function resetTeacherPassword() {
   const cur = document.getElementById('reset-current-pass');
@@ -3849,7 +4124,7 @@ function resetTeacherPassword() {
 // ===== PUBLIC API =====
 window._civicsRender = render;
 window.CivicsApp = {
-  toggleSidebar, startTimer, stopTimer, setTab, setName, setGrade, saveAnswer,
+  toggleSidebar, toggleSidebarSection, switchAnswerMode, startTimer, stopTimer, setTab, setName, setGrade, saveAnswer,
   toggleCheck, setMood, toggleEl, toggleRecord, startExamSim,
   nextExamPhase, stopExamSim, exportData, importData, checkTeacherPass,
   loadTeacherData, showStudentDetail, closeStudentDetail, exportAllData,
@@ -3864,6 +4139,7 @@ window.CivicsApp = {
   generateLesson, printLesson, copyLesson,
   toggleHighlight, clearHighlights, resetTeacherPassword,
   selectPracticeOption, showPracticeAnswer, toggleKeyConcept,
+  setTextSize, toggleSimplified,
   // Callback when exam questions are lazy-loaded
   _onExamQuestionsLoaded() { render(); },
   // Exam questions API

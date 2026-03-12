@@ -903,6 +903,20 @@ function renderTeacherGuide() {
   }
 
   let html = `<div class="teacher-guide-page" id="teacher-guide-content">
+    <nav class="tg-sidebar" role="navigation" aria-label="ניווט מדריך למורה">
+      <div class="tg-sidebar-title"><i class="fas fa-chalkboard-teacher"></i> תפריט המדריך</div>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('overview');this.classList.toggle('active')"><i class="fas fa-eye"></i> 1. סקירה כללית</button>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('getting-started');this.classList.toggle('active')"><i class="fas fa-play-circle"></i> 2. תחילת עבודה</button>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('structure');this.classList.toggle('active')"><i class="fas fa-sitemap"></i> 3. מבנה הפלטפורמה</button>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('teaching');this.classList.toggle('active')"><i class="fas fa-graduation-cap"></i> 4. שיטות הוראה</button>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('exam-prep');this.classList.toggle('active')"><i class="fas fa-clipboard-check"></i> 5. הכנה לבחינה</button>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('dashboard-guide');this.classList.toggle('active')"><i class="fas fa-tachometer-alt"></i> 6. דשבורד מורה</button>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('accessibility');this.classList.toggle('active')"><i class="fas fa-universal-access"></i> 7. נגישות ASD</button>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('curriculum');this.classList.toggle('active')"><i class="fas fa-map"></i> 8. מיפוי תוכנית</button>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('troubleshooting');this.classList.toggle('active')"><i class="fas fa-tools"></i> 9. פתרון בעיות</button>
+      <button class="tg-sidebar-item" onclick="window.CivicsFeatures.toggleTeacherSection('quick-ref');this.classList.toggle('active')"><i class="fas fa-bookmark"></i> 10. כרטיס עזר</button>
+    </nav>
+    <div class="tg-main">
     <div class="tg-hero">
       <h1><i class="fas fa-chalkboard-teacher"></i> מדריך למורה — אזרחות 2026</h1>
       <p class="tg-subtitle">מדריך מקיף לשימוש בפלטפורמת ההכנה לבגרות בעל-פה באזרחות</p>
@@ -1230,6 +1244,72 @@ function renderTeacherGuide() {
       </div>
     </div>`);
 
+  html += `</div></div>`;
+  return html;
+}
+
+// ===== COMPARISON TABLES PAGE =====
+function renderComparisonTablesPage() {
+  const tables = typeof COMPARISON_TABLES !== 'undefined' ? COMPARISON_TABLES : [];
+  const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  
+  let html = `<div class="comparison-tables-page">
+    <div class="comp-page-header">
+      <h1><i class="fas fa-table"></i> טבלאות השוואה</h1>
+      <p>טבלאות אלו מיועדות להשוואה ברורה בין מושגים מרכזיים בבחינת הבגרות באזרחות. כל טבלה כוללת קריטריונים, הבדלים ונקודות דמיון.</p>
+    </div>`;
+  
+  if (tables.length > 0) {
+    // Navigation
+    html += `<nav class="comp-page-nav" role="navigation" aria-label="ניווט טבלאות">`;
+    tables.forEach((tbl, i) => {
+      html += `<a href="#comp-table-${i}" onclick="document.getElementById('comp-table-${i}').scrollIntoView({behavior:'smooth'});return false;">${i+1}. ${esc(tbl.title.split('–')[0].split('מול')[0].trim())}</a>`;
+    });
+    html += `</nav>`;
+    
+    // Tables
+    tables.forEach((tbl, i) => {
+      html += `<div class="comp-table-card" id="comp-table-${i}">
+        <h2 class="table-title">${i+1}. ${esc(tbl.title)}</h2>
+        <div class="table-scroll">
+          <table class="comparison-table" role="table" aria-label="${esc(tbl.title)}">
+            <thead><tr>${tbl.headers.map(h => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead>
+            <tbody>${tbl.rows.map(row => `<tr>${row.map((cell, ci) => `<td${ci === 0 ? ' class="comp-topic"' : ''}>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+          </table>
+        </div>`;
+      
+      // Similarities
+      if (tbl.similarities && tbl.similarities.length > 0) {
+        html += `<div class="similarities-section">
+          <div class="comparison-similarities">
+            <div class="similarities-header"><i class="fas fa-check-double"></i> נקודות דמיון</div>
+            <ul class="similarities-list">
+              ${tbl.similarities.map(s => `<li class="similarity-item"><i class="fas fa-check"></i> ${s}</li>`).join('')}
+            </ul>
+          </div>
+        </div>`;
+      }
+      
+      // Unit links
+      if (tbl.unitIds && tbl.unitIds.length > 0) {
+        const unitLinks = tbl.unitIds.map(uid => {
+          const u = typeof UNITS_DATA !== 'undefined' ? UNITS_DATA.find(x => x.id === uid) : null;
+          const name = u ? u.title : `יחידה ${uid}`;
+          return `<a href="#unit/${uid}">${u ? u.icon : '📚'} יחידה ${uid}: ${name}</a>`;
+        }).join(' | ');
+        html += `<div class="table-units"><i class="fas fa-link"></i> ${unitLinks}</div>`;
+      }
+      
+      if (tbl.source) {
+        html += `<div style="margin-top:8px;font-size:13px;color:var(--text-gray,#666);text-align:center"><i class="fas fa-info-circle"></i> ${esc(tbl.source)}</div>`;
+      }
+      
+      html += `</div>`;
+    });
+  } else {
+    html += `<div style="text-align:center;padding:40px;color:var(--text-gray,#666)"><i class="fas fa-table" style="font-size:48px;margin-bottom:16px;display:block"></i><p>טבלאות ההשוואה ייטענו בקרוב...</p></div>`;
+  }
+  
   html += `</div>`;
   return html;
 }
@@ -1247,6 +1327,7 @@ function getPageRenderer(page, param) {
     case 'student-progress': return renderProgressDashboard();
     case 'mikud': return renderMikudPage();
     case 'teacher-guide': return renderTeacherGuide();
+    case 'comparison-tables': return renderComparisonTablesPage();
     default: return null;
   }
 }
@@ -1264,6 +1345,7 @@ window.CivicsFeatures = {
   renderAboutPage,
   renderProgressDashboard,
   renderTeacherGuide,
+  renderComparisonTablesPage,
   toggleTeacherSection,
   expandAllTeacherSections,
   collapseAllTeacherSections,

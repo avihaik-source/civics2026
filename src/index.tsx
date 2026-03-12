@@ -60,6 +60,7 @@ app.get('/', (c) => {
 </head>
 <body>
 <div id="app"><div style="display:flex;justify-content:center;align-items:center;height:100vh;direction:rtl;font-family:Assistant,sans-serif"><div style="text-align:center"><div style="font-size:48px;margin-bottom:16px">🎓</div><div style="font-size:20px;color:#0038b8;font-weight:700">טוען את אזרחות 2026...</div></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <script src="/static/data.js" defer></script>
 <script src="/static/mikud-data.js" defer></script>
 <script src="/static/comparison-tables.js" defer></script>
