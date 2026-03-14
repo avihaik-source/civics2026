@@ -2,7 +2,7 @@
 // Generated: 2026-03-05
 // Contains: 16 units, practice questions (3-5 per unit), key concepts (8-10 per unit)
 
-const UNITS_DATA = [
+window.UNITS_DATA = [
   {
     "id": 1,
     "title": "הרקע ההיסטורי והחלטה 181",
