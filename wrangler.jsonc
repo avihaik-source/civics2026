@@ -1,16 +1,19 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "civics2026",
-  "compatibility_date": "2026-03-01",
-  "pages_build_output_dir": "./dist",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_date": "2024-01-01",
+  "main": "dist/_worker.js",
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS"
+  },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "civics2026-production",
-      "database_id": "93488a89-9448-4cb9-998b-e4fad7b045aa"
+      "database_id": "9348ba89-944b-4cb9-998b-e4fad7b045aa"
     }
-  ]
+  ],
+  "vars": {
+    "TEACHER_PASSWORD": "0512"
+  }
 }
