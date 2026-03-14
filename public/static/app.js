@@ -1677,7 +1677,7 @@ function renderUnitPage() {
     <div role="tabpanel" id="tab-panel-${STATE.currentTab}">`;
 
   if (STATE.currentTab === 'learn') html += renderLearnTab(unit);
-  else if (STATE.currentTab === 'practice') html += renderPracticeTab(unit, questions);
+  else if (STATE.currentTab === 'practice') { console.log('🐛 Practice tab - questions:', questions.length);  html += renderPracticeTab(unit, questions);
   else html += renderSummaryTab(unit);
 
   html += `</div></div>`;
@@ -1801,7 +1801,7 @@ function renderLearnTab(unit) {
         html += `<div class="concept-section"><h2>🔗 קונספטים קשורים</h2>`;
         html += `<div style="display:flex;flex-direction:column;gap:8px">`;
         ct.relatedConcepts.forEach(rc => {
-          html += `<div style="padding:10px 14px;background:var(--asd-row-alt,#F9F9F7);border-radius:6px;border-right:3px solid var(--asd-primary,#5B9AA9);font-size:16px;line-height:1.6"><strong>${esc(rc.conceptId)}</strong> — ${esc(rc.relation)}</div>`;
+          html += `<div style="cursor:pointer;" onclick="alert('TODO: scroll to concept') "padding:10px 14px;background:var(--asd-row-alt,#F9F9F7);border-radius:6px;border-right:3px solid var(--asd-primary,#5B9AA9);font-size:16px;line-height:1.6"><strong>${esc(rc.conceptId)}</strong> — ${esc(rc.relation)}</div>`;
         });
         html += `</div></div>`;
       }
@@ -2002,6 +2002,15 @@ function renderLearnTab(unit) {
     }
     html += '</div>';
   }
+
+
+  // Unit Navigation
+  const nextUnit = UNITS_DATA.find(u => u.id === unit.id + 1);
+  const prevUnit = UNITS_DATA.find(u => u.id === unit.id - 1);
+  html += `<div style="display:flex;justify-content:space-between;margin-top:20px;flex-wrap:wrap;gap:10px">
+    ${prevUnit ? `<button class="btn btn-primary btn-lg" onclick="location.hash='unit/${prevUnit.id}'" aria-label="יחידה קודמת: ${prevUnit.title}"><i class="fas fa-arrow-right"></i> יחידה ${prevUnit.id}: ${prevUnit.title}</button>` : '<div></div>'}
+    ${nextUnit ? `<button class="btn btn-success btn-lg" onclick="location.hash='unit/${nextUnit.id}'" aria-label="יחידה הבאה: ${nextUnit.title}">יחידה ${nextUnit.id}: ${nextUnit.title} <i class="fas fa-arrow-left"></i></button>` : '<div></div>'}
+  </div>`;
 
   return html;
 }
