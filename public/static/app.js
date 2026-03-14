@@ -1677,7 +1677,7 @@ function renderUnitPage() {
     <div role="tabpanel" id="tab-panel-${STATE.currentTab}">`;
 
   if (STATE.currentTab === 'learn') html += renderLearnTab(unit);
-  else if (STATE.currentTab === 'practice') { console.log('🐛 Practice tab - questions:', questions.length);  html += renderPracticeTab(unit, questions);
+  else if (STATE.currentTab === 'practice') { console.log('🐛 Practice tab - questions:', questions.length);  html += renderPracticeTab(unit, questions); }
   else html += renderSummaryTab(unit);
 
   html += `</div></div>`;
