@@ -5,3 +5,4 @@ dist/
 *.log
 .pm2/
 מבקש שתסדר את כלל המקומות בהם מופיעים סעיפים.docx
+!dist/.assetsignore 
