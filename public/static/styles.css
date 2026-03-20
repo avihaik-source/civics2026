@@ -147,3 +147,54 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: var(--neu-shadow-inset) !important;
     transform: none; /* במקום קפיצה, הכפתור פשוט 'שוקע' */
 }
+/* =========================================================
+   מסכת קריאה (Focus Mask) - פיגום קוגניטיבי
+   ========================================================= */
+
+/* שכבת ההחשכה הכללית */
+#focus-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 36, 0.85); /* צבע כהה, שקט ומרגיע */
+    z-index: 9998;
+    opacity: 0;
+    pointer-events: none; /* כדי שלא יפריע כשהוא שקוף */
+    transition: opacity 0.3s ease;
+}
+
+#focus-overlay.active {
+    opacity: 1;
+    pointer-events: auto; /* עכשיו הוא לוכד לחיצות */
+}
+
+/* הכרטיסיה שנמצאת בפוקוס */
+.focused-card {
+    position: relative;
+    z-index: 9999 !important; /* מעל שכבת ההחשכה */
+    transform: scale(1.02); /* הגדלה עדינה מאוד */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+    transition: transform 0.3s ease, z-index 0s;
+}
+
+/* כפתור הפעלת המסכה (אייקון העין) */
+.btn-focus {
+    background: transparent !important;
+    color: var(--text-gray);
+    box-shadow: none !important;
+    font-size: 20px;
+    padding: 8px;
+    border-radius: 50%;
+}
+
+.btn-focus:hover {
+    color: var(--primary-blue);
+    background: var(--bg-section) !important;
+}
+
+/* כשהכרטיסיה בפוקוס - נרצה שהכפתור יאפשר "כיבוי" ויהיה כתום */
+.focused-card .btn-focus {
+    color: var(--accent-orange);
+}
