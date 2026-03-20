@@ -273,7 +273,49 @@ function applyA11ySettings() {
   // Contrast level
   root.setAttribute('data-contrast', A11Y.contrast === 'normal' ? '' : (A11Y.contrast || ''));
 }
+// ===== READING MASK (Focus Tool) =====
+function createReadingMask() {
+  if (document.getElementById('reading-mask')) return;
+  
+  const mask = document.createElement('div');
+  mask.id = 'reading-mask';
+  // משתמשים ב-box-shadow ענק כדי להחשיך את כל מה שמסביב לסרגל, ולהשאיר את האמצע שקוף
+  mask.style.cssText = `
+    position: fixed;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+    border-top: 3px solid #4299e1;
+    border-bottom: 3px solid #4299e1;
+    transition: top 0.05s linear;
+  `;
+  document.body.appendChild(mask);
 
+  // גורם לסרגל לעקוב אחר העכבר רק כשהוא מופעל
+  document.addEventListener('mousemove', (e) => {
+    if (mask.style.display === 'block') {
+      mask.style.top = (e.clientY - 40) + 'px'; // ממקם את הסרגל באמצע העכבר
+    }
+  });
+}
+
+function toggleReadingMask() {
+  const mask = document.getElementById('reading-mask');
+  if (!mask) createReadingMask();
+  
+  const el = document.getElementById('reading-mask');
+  const isActive = el.style.display === 'block';
+  el.style.display = isActive ? 'none' : 'block';
+  
+  // הוספת חיווי לקורא מסך
+  if (typeof announceToSR === 'function') {
+    announceToSR(isActive ? 'סרגל מיקוד קריאה כובה' : 'סרגל מיקוד קריאה הופעל');
+  }
+}
 function toggleHideImages() {
   A11Y.hideImages = !A11Y.hideImages;
   applyA11ySettings();
