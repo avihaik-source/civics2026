@@ -1,6 +1,25 @@
 // ===== CIVICS 2026 - MAIN APPLICATION (Universal Accessibility Edition) =====
 (function() {
 'use strict';
+// ===== CRITICAL: Check if UNITS_DATA is defined (Fallback UX) =====
+if (typeof window.UNITS_DATA === 'undefined') {
+  console.error('❌ CRITICAL: window.UNITS_DATA is undefined!');
+  document.body.innerHTML = `
+    <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:999999;direction:rtl;font-family:Assistant,sans-serif">
+      <div style="background:white;padding:40px;border-radius:16px;max-width:500px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:64px;margin-bottom:20px">⚠️</div>
+        <h2 style="color:#d32f2f;font-size:24px;font-weight:700;margin:0 0 16px 0">שגיאה טכנית זמנית</h2>
+        <p style="color:#666;font-size:16px;line-height:1.6;margin:0 0 24px 0">הנתונים לא נטענו כראוי.<br>אנא רענן את הדף או נסה שוב מאוחר יותר.</p>
+        <button onclick="location.reload()" style="background:#0038b8;color:white;border:none;padding:12px 32px;font-size:18px;font-weight:700;border-radius:8px;cursor:pointer;font-family:inherit">
+          🔄 רענן דף
+        </button>
+        <p style="color:#999;font-size:12px;margin:24px 0 0 0">אם הבעיה נמשכת, אנא פנה למורה</p>
+      </div>
+    </div>`;
+  throw new Error('UNITS_DATA undefined - fallback UI shown');
+}
+// ===== END FALLBACK CHECK =====
+
 
 // ===== ENSURE EXAM_QUESTIONS EXISTS (may be loaded lazily or missing) =====
 // NOTE: questions-data.js loads async and builds window.EXAM_QUESTIONS
