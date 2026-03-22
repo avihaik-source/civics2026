@@ -4268,3 +4268,63 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else init();
 
 })();
+// ===== READING MASK (מיקוד קריאה) =====
+window.CivicsApp.toggleReadingMask = function() {
+  // נוודא שאובייקט הנגישות קיים
+  if (typeof A11Y === 'undefined') window.A11Y = {};
+  
+  // מחליפים את מצב הפעולה
+  A11Y.readingMaskActive = !A11Y.readingMaskActive;
+  
+  let maskEl = document.getElementById('a11y-reading-mask');
+  
+  if (A11Y.readingMaskActive) {
+    // יצירת המסכה אם היא עדיין לא קיימת
+    if (!maskEl) {
+      maskEl = document.createElement('div');
+      maskEl.id = 'a11y-reading-mask';
+      
+      // עיצוב המסכה - טריק ה-box-shadow מחשיך את כל מה שמעל ומתחת לחלון שלנו
+      maskEl.style.cssText = `
+        position: fixed;
+        left: 0;
+        width: 100vw;
+        height: 120px; /* גובה חלון הקריאה */
+        top: 50vh;
+        transform: translateY(-50%);
+        pointer-events: none; /* מאפשר ללחוץ ולסמן טקסט מתחת למסכה */
+        z-index: 99999;
+        box-shadow: 0 -4000px 0 4000px rgba(0, 0, 0, 0.75), 0 4000px 0 4000px rgba(0, 0, 0, 0.75);
+        border-top: 2px solid #4299e1;
+        border-bottom: 2px solid #4299e1;
+        transition: top 0.05s ease-out; /* תנועה חלקה אחרי העכבר */
+      `;
+      document.body.appendChild(maskEl);
+      
+      // פונקציה למעקב אחרי העכבר
+      window._updateReadingMask = function(e) {
+        maskEl.style.top = e.clientY + 'px';
+      };
+      
+      // פונקציה לסגירה מהירה עם כפתור אסקייפ
+      window._closeReadingMaskOnEsc = function(e) {
+        if (e.key === 'Escape' && A11Y.readingMaskActive) {
+          window.CivicsApp.toggleReadingMask();
+        }
+      };
+    }
+    
+    // הפעלת המסכה והמאזינים
+    maskEl.style.display = 'block';
+    document.addEventListener('mousemove', window._updateReadingMask);
+    document.addEventListener('keydown', window._closeReadingMaskOnEsc);
+    
+  } else {
+    // כיבוי המסכה והסרת המאזינים כדי לא להכביד על הדפדפן
+    if (maskEl) {
+      maskEl.style.display = 'none';
+      document.removeEventListener('mousemove', window._updateReadingMask);
+      document.removeEventListener('keydown', window._closeReadingMaskOnEsc);
+    }
+  }
+};
