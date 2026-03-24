@@ -292,7 +292,49 @@ function applyA11ySettings() {
   // Contrast level
   root.setAttribute('data-contrast', A11Y.contrast === 'normal' ? '' : (A11Y.contrast || ''));
 }
+// ===== READING MASK (Focus Tool) =====
+function createReadingMask() {
+  if (document.getElementById('reading-mask')) return;
+  
+  const mask = document.createElement('div');
+  mask.id = 'reading-mask';
+  // משתמשים ב-box-shadow ענק כדי להחשיך את כל מה שמסביב לסרגל, ולהשאיר את האמצע שקוף
+  mask.style.cssText = `
+    position: fixed;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+    border-top: 3px solid #4299e1;
+    border-bottom: 3px solid #4299e1;
+    transition: top 0.05s linear;
+  `;
+  document.body.appendChild(mask);
 
+  // גורם לסרגל לעקוב אחר העכבר רק כשהוא מופעל
+  document.addEventListener('mousemove', (e) => {
+    if (mask.style.display === 'block') {
+      mask.style.top = (e.clientY - 40) + 'px'; // ממקם את הסרגל באמצע העכבר
+    }
+  });
+}
+
+function toggleReadingMask() {
+  const mask = document.getElementById('reading-mask');
+  if (!mask) createReadingMask();
+  
+  const el = document.getElementById('reading-mask');
+  const isActive = el.style.display === 'block';
+  el.style.display = isActive ? 'none' : 'block';
+  
+  // הוספת חיווי לקורא מסך
+  if (typeof announceToSR === 'function') {
+    announceToSR(isActive ? 'סרגל מיקוד קריאה כובה' : 'סרגל מיקוד קריאה הופעל');
+  }
+}
 function toggleHideImages() {
   A11Y.hideImages = !A11Y.hideImages;
   applyA11ySettings();
@@ -499,7 +541,46 @@ function toggleHideTimers() {
   saveA11ySettings();
   render();
 }
+// ===== READING MASK (Focus Tool) =====
+function createReadingMask() {
+  if (document.getElementById('reading-mask')) return;
+  
+  const mask = document.createElement('div');
+  mask.id = 'reading-mask';
+  mask.style.cssText = `
+    position: fixed;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+    border-top: 3px solid #4299e1;
+    border-bottom: 3px solid #4299e1;
+    transition: top 0.05s linear;
+  `;
+  document.body.appendChild(mask);
 
+  document.addEventListener('mousemove', (e) => {
+    if (mask.style.display === 'block') {
+      mask.style.top = (e.clientY - 40) + 'px';
+    }
+  });
+}
+
+function toggleReadingMask() {
+  const mask = document.getElementById('reading-mask');
+  if (!mask) createReadingMask();
+  
+  const el = document.getElementById('reading-mask');
+  const isActive = el.style.display === 'block';
+  el.style.display = isActive ? 'none' : 'block';
+  
+  if (typeof announceToSR === 'function') {
+    announceToSR(isActive ? 'סרגל מיקוד קריאה כובה' : 'סרגל מיקוד קריאה הופעל');
+  }
+}
 function toggleReducedMotion() {
   A11Y.reducedMotion = !A11Y.reducedMotion;
   applyA11ySettings();
@@ -3023,13 +3104,15 @@ function renderQuestionsPage() {
             ${isAnswered ? '<span style="font-size:12px;color:#38a169"><i class="fas fa-check"></i> נענתה</span>' : ''}
             ${unitMap[q.id] ? unitMap[q.id].map(function(uid) { var u = (typeof UNITS_DATA !== 'undefined' ? UNITS_DATA : []).find(function(x){return x.id===uid}); return u ? '<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#ebf8ff;color:#2b6cb0">' + u.icon + ' יח\' ' + uid + '</span>' : ''; }).join(' ') : ''}
           </div>
-          ${isExpanded ? 
+${isExpanded ? 
             `<div class="q-full-text" style="white-space:pre-wrap;line-height:2;margin-top:8px;padding:16px;background:var(--bg-section);border-radius:8px;border:1px solid var(--border-color);font-size:${A11Y.fontSize}%">${_formatQText(q.full_text, _questionsState.searchQuery)}</div>
-             <button class="btn btn-sm" style="margin-top:8px" onclick="event.stopPropagation();window.CivicsApp.toggleQExpand('${q.id}')"><i class="fas fa-compress-alt"></i> כווץ</button>` :
+             <div style="display:flex; gap:8px; margin-top:8px;">
+               <button class="btn btn-sm" onclick="event.stopPropagation();window.CivicsApp.toggleQExpand('${q.id}')"><i class="fas fa-compress-alt"></i> כווץ</button>
+               <button class="btn btn-sm" style="background:#edf2f7;color:#2b6cb0;border:1px solid #cbd5e0;" onclick="event.stopPropagation();window.CivicsApp.toggleReadingMask()"><i class="fas fa-ruler-horizontal"></i> מיקוד קריאה</button>
+             </div>` :
             `<p style="color:var(--text-gray);font-size:14px;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${_highlightQSearch(_escHtml(preview), _questionsState.searchQuery)}</p>
              <button class="btn btn-sm" style="margin-top:4px"><i class="fas fa-expand-alt"></i> הצג שאלה מלאה</button>`
           }
-        </div>
       </div>
     </div>`;
   });
@@ -4167,7 +4250,7 @@ window.CivicsApp = {
   generateLesson, printLesson, copyLesson,
   toggleHighlight, clearHighlights, resetTeacherPassword,
   selectPracticeOption, showPracticeAnswer, toggleKeyConcept,
-  setTextSize, toggleSimplified,
+  setTextSize, toggleSimplified, toggleReadingMask,
   // Callback when exam questions are lazy-loaded
   _onExamQuestionsLoaded() { render(); },
   // Exam questions API
@@ -4184,4 +4267,181 @@ window.CivicsApp = {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
 
+// ===== READING MASK (מיקוד קריאה) =====
+window.CivicsApp.toggleReadingMask = function() {
+  // נוודא שאובייקט הנגישות קיים
+  if (typeof A11Y === 'undefined') window.A11Y = {};
+  
+  // מחליפים את מצב הפעולה
+  A11Y.readingMaskActive = !A11Y.readingMaskActive;
+  
+  let maskEl = document.getElementById('a11y-reading-mask');
+  
+  if (A11Y.readingMaskActive) {
+    // יצירת המסכה אם היא עדיין לא קיימת
+    if (!maskEl) {
+      maskEl = document.createElement('div');
+      maskEl.id = 'a11y-reading-mask';
+      
+      // עיצוב המסכה - טריק ה-box-shadow מחשיך את כל מה שמעל ומתחת לחלון שלנו
+      maskEl.style.cssText = `
+        position: fixed;
+        left: 0;
+        width: 100vw;
+        height: 120px; /* גובה חלון הקריאה */
+        top: 50vh;
+        transform: translateY(-50%);
+        pointer-events: none; /* מאפשר ללחוץ ולסמן טקסט מתחת למסכה */
+        z-index: 99999;
+        box-shadow: 0 -4000px 0 4000px rgba(0, 0, 0, 0.75), 0 4000px 0 4000px rgba(0, 0, 0, 0.75);
+        border-top: 2px solid #4299e1;
+        border-bottom: 2px solid #4299e1;
+        transition: top 0.05s ease-out; /* תנועה חלקה אחרי העכבר */
+      `;
+      document.body.appendChild(maskEl);
+      
+      // פונקציה למעקב אחרי העכבר
+      window._updateReadingMask = function(e) {
+        maskEl.style.top = e.clientY + 'px';
+      };
+      
+      // פונקציה לסגירה מהירה עם כפתור אסקייפ
+      window._closeReadingMaskOnEsc = function(e) {
+        if (e.key === 'Escape' && A11Y.readingMaskActive) {
+          window.CivicsApp.toggleReadingMask();
+        }
+      };
+    }
+    
+    // הפעלת המסכה והמאזינים
+    maskEl.style.display = 'block';
+    document.addEventListener('mousemove', window._updateReadingMask);
+    document.addEventListener('keydown', window._closeReadingMaskOnEsc);
+    
+  } else {
+    // כיבוי המסכה והסרת המאזינים כדי לא להכביד על הדפדפן
+    if (maskEl) {
+      maskEl.style.display = 'none';
+      document.removeEventListener('mousemove', window._updateReadingMask);
+      document.removeEventListener('keydown', window._closeReadingMaskOnEsc);
+    }
+  }
+};
+// =========================================================================
+// ===== NANO BANANA DYNAMIC MODULE (VOICE & AUTO-SAVE FOR ASD) =====
+// =========================================================================
+function initNanoBanana() {
+  const btn = document.getElementById('voice-record-btn');
+  if (!btn) return; // מוודא שהלוח קיים בדף
+
+  // חיבור תאי הטבלה למערכת השמירה הקיימת שלך (debouncedSync)
+  const cells = [
+    { el: document.getElementById('ans-bchana'), key: 'nano-bchana' },
+    { el: document.getElementById('ans-aflaya'), key: 'nano-aflaya' },
+    { el: document.getElementById('ans-hadafa'), key: 'nano-hadafa' }
+  ];
+
+  // 1. שחזור נתונים קודמים מה-LocalStorage / D1
+  cells.forEach(c => {
+    if (!c.el) return;
+    // משתמש במערכת ה-NOTES הקיימת שלך כדי לשמור את הבננות בלי לשבור את ה-Progress
+    const savedVal = getNote(c.key); 
+    if (savedVal) c.el.textContent = savedVal;
+
+    // 2. שמירה אוטומטית בכל פעם שהתלמיד מקליד
+    c.el.addEventListener('input', () => {
+      saveNote(c.key, c.el.textContent);
+      if (typeof window.debouncedSync === 'function') {
+        window.debouncedSync(); // סנכרון ישיר ל-Cloudflare D1!
+      }
+    });
+  });
+
+  // 3. מערכת הקלטה קולית (Voice Recognition) מונגשת
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    btn.style.display = 'none'; // העלמת הכפתור אם הדפדפן לא תומך
+    return;
+  }
+
+  let nanoRec = new SpeechRecognition();
+  nanoRec.lang = 'he-IL';
+  nanoRec.continuous = false;
+  nanoRec.interimResults = false; // מונע קפיצות טקסט מרצדות
+
+  let isRecording = false;
+  let activeCell = null;
+
+  // מעקב איזה תא נבחר אחרון
+  cells.forEach(c => {
+    if(c.el) c.el.addEventListener('focus', () => { activeCell = c.el; });
+  });
+
+  btn.addEventListener('click', () => {
+    // אם לחצו בזמן הקלטה, נעצור אותה
+    if (isRecording) {
+      nanoRec.stop();
+      return;
+    }
+
+    // אם התלמיד לא בחר תא מראש, נבחר אוטומטית את התא הריק הראשון
+    if (!activeCell || document.activeElement.contentEditable !== "true") {
+      activeCell = cells.find(c => c.el && c.el.textContent.trim() === '')?.el || cells[0].el;
+    }
+    
+    if (activeCell) activeCell.focus();
+
+    try {
+      nanoRec.start();
+    } catch(e) {
+      console.error('שגיאת מיקרופון:', e);
+    }
+  });
+
+  // חיווי ויזואלי להקלטה (ASD Friendly)
+  nanoRec.onstart = () => {
+    isRecording = true;
+    btn.innerHTML = '<i class="fas fa-stop-circle"></i> מקליט... (דברו עכשיו)';
+    btn.style.background = '#ef4444'; // צבע אדום
+    btn.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
+    if (typeof announceToSR === 'function') announceToSR('הקלטה קולית הופעלה');
+  };
+
+  nanoRec.onresult = (event) => {
+    if (!activeCell) return;
+    let finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+    }
+    
+    if (finalTranscript) {
+       // הזרקת הטקסט לתא
+       activeCell.textContent += (activeCell.textContent ? ' ' : '') + finalTranscript;
+       // טריגר לשמירה אוטומטית בענן
+       const key = cells.find(c => c.el === activeCell)?.key;
+       if (key) {
+         saveNote(key, activeCell.textContent);
+         if (typeof window.debouncedSync === 'function') window.debouncedSync();
+       }
+    }
+  };
+
+  nanoRec.onend = () => {
+    isRecording = false;
+    btn.innerHTML = '<i class="fas fa-microphone"></i> הקלט תשובה במקום להקליד';
+    btn.style.background = 'var(--brand-blue)';
+    btn.style.boxShadow = 'none';
+    if (typeof announceToSR === 'function') announceToSR('הקלטה הסתיימה');
+  };
+}
+
+// הפעלת ננו בננה ברגע שהאפליקציה עולה
+window.addEventListener('load', () => {
+  setTimeout(initNanoBanana, 800);
+});
+  
+<<<<<<< HEAD
 })();
+=======
+})();
+>>>>>>> 0f30a666c846883d29344132b91b62ee5bea7ca9
