@@ -4440,4 +4440,8 @@ window.addEventListener('load', () => {
   setTimeout(initNanoBanana, 800);
 });
   
+<<<<<<< HEAD
 })();
+=======
+})();
+>>>>>>> 0f30a666c846883d29344132b91b62ee5bea7ca9

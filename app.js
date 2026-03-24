@@ -3112,7 +3112,7 @@ ${isExpanded ?
              </div>` :
             `<p style="color:var(--text-gray);font-size:14px;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${_highlightQSearch(_escHtml(preview), _questionsState.searchQuery)}</p>
              <button class="btn btn-sm" style="margin-top:4px"><i class="fas fa-expand-alt"></i> הצג שאלה מלאה</button>`
-          }        </div>
+          }
       </div>
     </div>`;
   });
