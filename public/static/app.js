@@ -4328,3 +4328,115 @@ window.CivicsApp.toggleReadingMask = function() {
     }
   }
 };
+// =========================================================================
+// ===== NANO BANANA DYNAMIC MODULE (VOICE & AUTO-SAVE FOR ASD) =====
+// =========================================================================
+function initNanoBanana() {
+  const btn = document.getElementById('voice-record-btn');
+  if (!btn) return; // מוודא שהלוח קיים בדף
+
+  // חיבור תאי הטבלה למערכת השמירה הקיימת שלך (debouncedSync)
+  const cells = [
+    { el: document.getElementById('ans-bchana'), key: 'nano-bchana' },
+    { el: document.getElementById('ans-aflaya'), key: 'nano-aflaya' },
+    { el: document.getElementById('ans-hadafa'), key: 'nano-hadafa' }
+  ];
+
+  // 1. שחזור נתונים קודמים מה-LocalStorage / D1
+  cells.forEach(c => {
+    if (!c.el) return;
+    // משתמש במערכת ה-NOTES הקיימת שלך כדי לשמור את הבננות בלי לשבור את ה-Progress
+    const savedVal = getNote(c.key); 
+    if (savedVal) c.el.textContent = savedVal;
+
+    // 2. שמירה אוטומטית בכל פעם שהתלמיד מקליד
+    c.el.addEventListener('input', () => {
+      saveNote(c.key, c.el.textContent);
+      if (typeof window.debouncedSync === 'function') {
+        window.debouncedSync(); // סנכרון ישיר ל-Cloudflare D1!
+      }
+    });
+  });
+
+  // 3. מערכת הקלטה קולית (Voice Recognition) מונגשת
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    btn.style.display = 'none'; // העלמת הכפתור אם הדפדפן לא תומך
+    return;
+  }
+
+  let nanoRec = new SpeechRecognition();
+  nanoRec.lang = 'he-IL';
+  nanoRec.continuous = false;
+  nanoRec.interimResults = false; // מונע קפיצות טקסט מרצדות
+
+  let isRecording = false;
+  let activeCell = null;
+
+  // מעקב איזה תא נבחר אחרון
+  cells.forEach(c => {
+    if(c.el) c.el.addEventListener('focus', () => { activeCell = c.el; });
+  });
+
+  btn.addEventListener('click', () => {
+    // אם לחצו בזמן הקלטה, נעצור אותה
+    if (isRecording) {
+      nanoRec.stop();
+      return;
+    }
+
+    // אם התלמיד לא בחר תא מראש, נבחר אוטומטית את התא הריק הראשון
+    if (!activeCell || document.activeElement.contentEditable !== "true") {
+      activeCell = cells.find(c => c.el && c.el.textContent.trim() === '')?.el || cells[0].el;
+    }
+    
+    if (activeCell) activeCell.focus();
+
+    try {
+      nanoRec.start();
+    } catch(e) {
+      console.error('שגיאת מיקרופון:', e);
+    }
+  });
+
+  // חיווי ויזואלי להקלטה (ASD Friendly)
+  nanoRec.onstart = () => {
+    isRecording = true;
+    btn.innerHTML = '<i class="fas fa-stop-circle"></i> מקליט... (דברו עכשיו)';
+    btn.style.background = '#ef4444'; // צבע אדום
+    btn.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
+    if (typeof announceToSR === 'function') announceToSR('הקלטה קולית הופעלה');
+  };
+
+  nanoRec.onresult = (event) => {
+    if (!activeCell) return;
+    let finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+    }
+    
+    if (finalTranscript) {
+       // הזרקת הטקסט לתא
+       activeCell.textContent += (activeCell.textContent ? ' ' : '') + finalTranscript;
+       // טריגר לשמירה אוטומטית בענן
+       const key = cells.find(c => c.el === activeCell)?.key;
+       if (key) {
+         saveNote(key, activeCell.textContent);
+         if (typeof window.debouncedSync === 'function') window.debouncedSync();
+       }
+    }
+  };
+
+  nanoRec.onend = () => {
+    isRecording = false;
+    btn.innerHTML = '<i class="fas fa-microphone"></i> הקלט תשובה במקום להקליד';
+    btn.style.background = 'var(--brand-blue)';
+    btn.style.boxShadow = 'none';
+    if (typeof announceToSR === 'function') announceToSR('הקלטה הסתיימה');
+  };
+}
+
+// הפעלת ננו בננה ברגע שהאפליקציה עולה
+window.addEventListener('load', () => {
+  setTimeout(initNanoBanana, 800);
+});
