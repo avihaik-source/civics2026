@@ -2728,3 +2728,48 @@ window.UNITS_DATA = [
   }
 ];
 
+// =========================================================================
+// ===== הזרקת משפטי זיכרון (Cognitive Scaffolds) לתוך כרטיסיות הלימוד =====
+// =========================================================================
+(function injectMemorySentences() {
+  const scaffolds = {
+    "הפרדת רשויות": "⚓ משפט זיכרון: הכנסת, הממשלה ובתי המשפט בודקים זה את זה כדי שאף אחד לא יהיה חזק מדי.",
+    "הליך החקיקה": "⚓ משפט זיכרון: חוק מתחיל כהצעה ועובר שלוש קריאות בכנסת עד שהוא נכנס לספר החוקים.",
+    "שלטון החוק": "⚓ משפט זיכרון: כולם חייבים לציית לחוק - גם האזרחים וגם האנשים שמנהלים את המדינה.",
+    "בחירות דמוקרטיות": "⚓ משפט זיכרון: בחירות דמוקרטיות חייבות להיות כלליות, ישירות, שוות, מחזוריות וחופשיות.",
+    "אחריות ממשלתית": "⚓ משפט זיכרון: כל שר אחראי להחלטות של כל הממשלה, גם אם הוא לא הסכים להן.",
+    "זכויות קבוצתיות": "⚓ משפט זיכרון: המדינה נותנת לקבוצות מיעוט כלים לשמור על השפה והתרבות שלהן.",
+    "גישות כלכליות": "⚓ משפט זיכרון: המדינה בוחרת כמה להתערב בכלכלה כדי לעזור לחלשים או לתת חופש לעסקים.",
+    "פלורליזם": "⚓ משפט זיכרון: לתת מקום להרבה דעות וקבוצות שונות לחיות יחד במדינה.",
+    "מנגנוני פיקוח": "⚓ משפט זיכרון: יש גופים רשמיים כמו מבקר המדינה וגופים חופשיים כמו התקשורת ששומרים על הממשלה.",
+    "חוק השבות": "⚓ משפט זיכרון: חוק שמאפשר לכל יהודי, לבני זוגו, לילדיו ולנכדיו לעלות לישראל ולקבל אזרחות."
+  };
+
+  // עיצוב תומך קוגניטיבית (ASD Friendly) לתיבת משפט הזיכרון
+  const scaffoldStyle = "background: #eff6ff; color: #1E3A8A; padding: 10px 14px; border-radius: 8px; border-right: 4px solid #3b82f6; font-weight: bold; margin-top: 12px; display: block; font-size: 0.95em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+
+  if (typeof window !== 'undefined' && window.UNITS_DATA) {
+    window.UNITS_DATA.forEach(unit => {
+      // הזרקה לתוך המושגים המורחבים
+      if (unit.concepts) {
+        unit.concepts.forEach(concept => {
+          Object.keys(scaffolds).forEach(key => {
+            if (concept.term.includes(key) && !concept.def.includes("⚓")) {
+              concept.def += `<span style="${scaffoldStyle}">${scaffolds[key]}</span>`;
+            }
+          });
+        });
+      }
+      // הזרקה לתוך מושגי המפתח המקוצרים
+      if (unit.keyConcepts) {
+        unit.keyConcepts.forEach(concept => {
+          Object.keys(scaffolds).forEach(key => {
+            if (concept.term.includes(key) && !concept.def.includes("⚓")) {
+              concept.def += `<span style="${scaffoldStyle}">${scaffolds[key]}</span>`;
+            }
+          });
+        });
+      }
+    });
+  }
+})();
