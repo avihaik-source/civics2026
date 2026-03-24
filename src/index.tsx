@@ -79,7 +79,7 @@ app.get('/', (c) => {
     display: flex; justify-content: center; gap: 30px;
     background: var(--bg-color); padding: 15px 30px;
     border-radius: 12px; margin: 10px auto; max-width: 800px;
-    box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light); /* Soft Neumorphism */
+    box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
   }
   .station {
     display: flex; align-items: center; gap: 8px; font-family: 'Rubik', sans-serif;
@@ -92,13 +92,25 @@ app.get('/', (c) => {
   }
   .station.active .station-num { background: var(--brand-blue); color: white; }
   
-  /* מסכת הקריאה (מוחבאת כברירת מחדל) */
+  /* מסכת הקריאה */
   #focus-mask {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background: rgba(15, 23, 42, 0.85); z-index: 9999;
-    display: none; pointer-events: none; /* מאפשר לחיצה דרך המסכה */
+    display: none; pointer-events: none;
   }
-  /* חור המסכה ינוהל דרך JS עם mask-image */
+
+  /* תוספת: עיצוב ננו בננה - נקי, סטטי ומוכן לדינמיות */
+  .nano-grid { display: grid; grid-template-columns: 180px 1fr 1fr 1fr; gap: 15px; margin: 20px 0; }
+  .nano-cell { padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 15px; background: white; }
+  .header-blue { border-top: 6px solid #3b82f6; background: #eff6ff; font-weight: bold; text-align: center; }
+  .header-red { border-top: 6px solid #ef4444; background: #fef2f2; font-weight: bold; text-align: center; }
+  .header-green { border-top: 6px solid #10b981; background: #ecfdf5; font-weight: bold; text-align: center; }
+  .label-cell { background: #f1f5f9; font-weight: bold; display: flex; align-items: center; }
+  .editable-cell { border: 2px dashed #cbd5e1; cursor: text; transition: border-color 0.2s; min-height: 60px; outline: none; }
+  .editable-cell:focus { border-color: var(--brand-blue); background: #f8fafc; }
+  .action-btn { background: var(--brand-blue); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'Rubik', sans-serif; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+  .action-btn:hover { background: #152c6a; }
+  @media (max-width: 768px) { .nano-grid { grid-template-columns: 1fr; } .label-cell { display: none; } }
 </style>
 </head>
 <body>
@@ -122,14 +134,42 @@ app.get('/', (c) => {
   <div class="station" id="st-4"><div class="station-num">4</div> זירת תרגול</div>
 </nav>
 
-<div id="app">
-  <div style="display:flex;justify-content:center;align-items:center;height:60vh;">
-    <div style="text-align:center;">
-      <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; color: #1E3A8A; margin-bottom: 20px;"></i>
-      <div class="brand-font" style="font-size:22px; color: #334155;">מכין את סביבת הלמידה...</div>
+<main style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+  
+  <section id="nano-banana-section" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 30px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+          <h2 class="brand-font" style="color: var(--brand-blue); margin: 0; font-size: 24px;">🎯 זירת הניתוח: ננו בננה</h2>
+          <button id="voice-record-btn" class="action-btn"><i class="fas fa-microphone"></i> הקלט תשובה במקום להקליד</button>
+      </div>
+      
+      <div class="nano-grid">
+          <div class="p-2"></div>
+          <div class="nano-cell header-blue">🔵 הבחנה מותרת</div>
+          <div class="nano-cell header-red">🔴 אפליה פסולה</div>
+          <div class="nano-cell header-green">🟢 העדפה מתקנת</div>
+
+          <div class="nano-cell label-cell">הסיבה (למה?)</div>
+          <div class="nano-cell" style="background: #eff6ff">שוני רלוונטי לנושא</div>
+          <div class="nano-cell" style="background: #fef2f2">דעה קדומה וסטריאוטיפים</div>
+          <div class="nano-cell" style="background: #ecfdf5">תיקון עוול היסטורי</div>
+          
+          <div class="nano-cell label-cell">תרגול עצמי</div>
+          <div class="nano-cell editable-cell" contenteditable="true" id="ans-bchana" placeholder="כתוב דוגמה..."></div>
+          <div class="nano-cell editable-cell" contenteditable="true" id="ans-aflaya" placeholder="כתוב דוגמה..."></div>
+          <div class="nano-cell editable-cell" contenteditable="true" id="ans-hadafa" placeholder="כתוב דוגמה..."></div>
+      </div>
+  </section>
+
+  <div id="app">
+    <div style="display:flex;justify-content:center;align-items:center;height:40vh;">
+      <div style="text-align:center;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; color: #1E3A8A; margin-bottom: 20px;"></i>
+        <div class="brand-font" style="font-size:22px; color: #334155;">מכין את סביבת הלמידה...</div>
+      </div>
     </div>
   </div>
-</div>
+
+</main>
 
 <div id="focus-mask"></div>
 
@@ -147,7 +187,6 @@ window.addEventListener('load',function(){
 });
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}
 
-// פונקציית עזר גלובלית להפעלת מסכת הקריאה מתוך app.js בהמשך
 window.toggleFocusMask = function(targetElementId) {
   const mask = document.getElementById('focus-mask');
   const target = document.getElementById(targetElementId);
@@ -156,7 +195,6 @@ window.toggleFocusMask = function(targetElementId) {
   } else if (target) {
     const rect = target.getBoundingClientRect();
     mask.style.display = 'block';
-    // יצירת 'חור' במסכה סביב האלמנט
     mask.style.clipPath = \`polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 
       \${rect.left - 10}px \${rect.top - 10}px, 
       \${rect.left - 10}px \${rect.bottom + 10}px, 
@@ -230,7 +268,6 @@ app.get('/api/sync/:studentId', async (c) => {
     const student = await db.prepare('SELECT * FROM students WHERE id = ?').bind(studentId).first();
     if (!student) return c.json({ found: false, data: null });
     
-    // (הקוד המקורי שלך לשליפת ההתקדמות נשמר במדויק)
     const progressRows = await db.prepare('SELECT * FROM progress WHERE student_id = ?').bind(studentId).all();
     const progress: Record<string, any> = {};
     for (const row of progressRows.results) {
@@ -246,9 +283,6 @@ app.get('/api/sync/:studentId', async (c) => {
     return c.json({ found: false, data: null, error: e.message });
   }
 });
-
-// === REST OF TEACHER AND ANALYTICS APIs REMAINS EXACTLY THE SAME AS YOUR ORIGINAL CODE ===
-// (מטעמי חיסכון במקום השארתי את הפונקציונליות זהה לפלטפורמה המקורית שלך)
 
 async function getTeacherPassword(db: D1Database | null, envPassword?: string): Promise<string> {
   if (db) {
