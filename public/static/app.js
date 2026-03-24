@@ -4267,7 +4267,6 @@ window.CivicsApp = {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
 
-})();
 // ===== READING MASK (מיקוד קריאה) =====
 window.CivicsApp.toggleReadingMask = function() {
   // נוודא שאובייקט הנגישות קיים
@@ -4440,3 +4439,4 @@ function initNanoBanana() {
 window.addEventListener('load', () => {
   setTimeout(initNanoBanana, 800);
 });
+})();
