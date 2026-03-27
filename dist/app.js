@@ -4267,4 +4267,181 @@ window.CivicsApp = {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
 
+// ===== READING MASK (מיקוד קריאה) =====
+window.CivicsApp.toggleReadingMask = function() {
+  // נוודא שאובייקט הנגישות קיים
+  if (typeof A11Y === 'undefined') window.A11Y = {};
+  
+  // מחליפים את מצב הפעולה
+  A11Y.readingMaskActive = !A11Y.readingMaskActive;
+  
+  let maskEl = document.getElementById('a11y-reading-mask');
+  
+  if (A11Y.readingMaskActive) {
+    // יצירת המסכה אם היא עדיין לא קיימת
+    if (!maskEl) {
+      maskEl = document.createElement('div');
+      maskEl.id = 'a11y-reading-mask';
+      
+      // עיצוב המסכה - טריק ה-box-shadow מחשיך את כל מה שמעל ומתחת לחלון שלנו
+      maskEl.style.cssText = `
+        position: fixed;
+        left: 0;
+        width: 100vw;
+        height: 120px; /* גובה חלון הקריאה */
+        top: 50vh;
+        transform: translateY(-50%);
+        pointer-events: none; /* מאפשר ללחוץ ולסמן טקסט מתחת למסכה */
+        z-index: 99999;
+        box-shadow: 0 -4000px 0 4000px rgba(0, 0, 0, 0.75), 0 4000px 0 4000px rgba(0, 0, 0, 0.75);
+        border-top: 2px solid #4299e1;
+        border-bottom: 2px solid #4299e1;
+        transition: top 0.05s ease-out; /* תנועה חלקה אחרי העכבר */
+      `;
+      document.body.appendChild(maskEl);
+      
+      // פונקציה למעקב אחרי העכבר
+      window._updateReadingMask = function(e) {
+        maskEl.style.top = e.clientY + 'px';
+      };
+      
+      // פונקציה לסגירה מהירה עם כפתור אסקייפ
+      window._closeReadingMaskOnEsc = function(e) {
+        if (e.key === 'Escape' && A11Y.readingMaskActive) {
+          window.CivicsApp.toggleReadingMask();
+        }
+      };
+    }
+    
+    // הפעלת המסכה והמאזינים
+    maskEl.style.display = 'block';
+    document.addEventListener('mousemove', window._updateReadingMask);
+    document.addEventListener('keydown', window._closeReadingMaskOnEsc);
+    
+  } else {
+    // כיבוי המסכה והסרת המאזינים כדי לא להכביד על הדפדפן
+    if (maskEl) {
+      maskEl.style.display = 'none';
+      document.removeEventListener('mousemove', window._updateReadingMask);
+      document.removeEventListener('keydown', window._closeReadingMaskOnEsc);
+    }
+  }
+};
+// =========================================================================
+// ===== NANO BANANA DYNAMIC MODULE (VOICE & AUTO-SAVE FOR ASD) =====
+// =========================================================================
+function initNanoBanana() {
+  const btn = document.getElementById('voice-record-btn');
+  if (!btn) return; // מוודא שהלוח קיים בדף
+
+  // חיבור תאי הטבלה למערכת השמירה הקיימת שלך (debouncedSync)
+  const cells = [
+    { el: document.getElementById('ans-bchana'), key: 'nano-bchana' },
+    { el: document.getElementById('ans-aflaya'), key: 'nano-aflaya' },
+    { el: document.getElementById('ans-hadafa'), key: 'nano-hadafa' }
+  ];
+
+  // 1. שחזור נתונים קודמים מה-LocalStorage / D1
+  cells.forEach(c => {
+    if (!c.el) return;
+    // משתמש במערכת ה-NOTES הקיימת שלך כדי לשמור את הבננות בלי לשבור את ה-Progress
+    const savedVal = getNote(c.key); 
+    if (savedVal) c.el.textContent = savedVal;
+
+    // 2. שמירה אוטומטית בכל פעם שהתלמיד מקליד
+    c.el.addEventListener('input', () => {
+      saveNote(c.key, c.el.textContent);
+      if (typeof window.debouncedSync === 'function') {
+        window.debouncedSync(); // סנכרון ישיר ל-Cloudflare D1!
+      }
+    });
+  });
+
+  // 3. מערכת הקלטה קולית (Voice Recognition) מונגשת
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    btn.style.display = 'none'; // העלמת הכפתור אם הדפדפן לא תומך
+    return;
+  }
+
+  let nanoRec = new SpeechRecognition();
+  nanoRec.lang = 'he-IL';
+  nanoRec.continuous = false;
+  nanoRec.interimResults = false; // מונע קפיצות טקסט מרצדות
+
+  let isRecording = false;
+  let activeCell = null;
+
+  // מעקב איזה תא נבחר אחרון
+  cells.forEach(c => {
+    if(c.el) c.el.addEventListener('focus', () => { activeCell = c.el; });
+  });
+
+  btn.addEventListener('click', () => {
+    // אם לחצו בזמן הקלטה, נעצור אותה
+    if (isRecording) {
+      nanoRec.stop();
+      return;
+    }
+
+    // אם התלמיד לא בחר תא מראש, נבחר אוטומטית את התא הריק הראשון
+    if (!activeCell || document.activeElement.contentEditable !== "true") {
+      activeCell = cells.find(c => c.el && c.el.textContent.trim() === '')?.el || cells[0].el;
+    }
+    
+    if (activeCell) activeCell.focus();
+
+    try {
+      nanoRec.start();
+    } catch(e) {
+      console.error('שגיאת מיקרופון:', e);
+    }
+  });
+
+  // חיווי ויזואלי להקלטה (ASD Friendly)
+  nanoRec.onstart = () => {
+    isRecording = true;
+    btn.innerHTML = '<i class="fas fa-stop-circle"></i> מקליט... (דברו עכשיו)';
+    btn.style.background = '#ef4444'; // צבע אדום
+    btn.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
+    if (typeof announceToSR === 'function') announceToSR('הקלטה קולית הופעלה');
+  };
+
+  nanoRec.onresult = (event) => {
+    if (!activeCell) return;
+    let finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+    }
+    
+    if (finalTranscript) {
+       // הזרקת הטקסט לתא
+       activeCell.textContent += (activeCell.textContent ? ' ' : '') + finalTranscript;
+       // טריגר לשמירה אוטומטית בענן
+       const key = cells.find(c => c.el === activeCell)?.key;
+       if (key) {
+         saveNote(key, activeCell.textContent);
+         if (typeof window.debouncedSync === 'function') window.debouncedSync();
+       }
+    }
+  };
+
+  nanoRec.onend = () => {
+    isRecording = false;
+    btn.innerHTML = '<i class="fas fa-microphone"></i> הקלט תשובה במקום להקליד';
+    btn.style.background = 'var(--brand-blue)';
+    btn.style.boxShadow = 'none';
+    if (typeof announceToSR === 'function') announceToSR('הקלטה הסתיימה');
+  };
+}
+
+// הפעלת ננו בננה ברגע שהאפליקציה עולה
+window.addEventListener('load', () => {
+  setTimeout(initNanoBanana, 800);
+});
+  
+<<<<<<< HEAD
 })();
+=======
+})();
+>>>>>>> 0f30a666c846883d29344132b91b62ee5bea7ca9
