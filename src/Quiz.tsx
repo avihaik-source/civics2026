@@ -1,26 +1,10 @@
-input, textarea {
-  width: 100%;
-  padding: 10px;
-  border: 2px solid var(--gov-gray-700);
-  border-radius: 8px;
-  font-family: var(--font-main);
-  transition: border-color 0.2s;
-}
-
-input:focus, textarea:focus {
-  border-color: var(--gov-focus);
-  outline: none; /* ה-outline הכללי שלנו יתפוס כאן */
-}
 import React, { useState, useEffect, useRef } from 'react';
-// במידה והשתמשנו ב-Hook שיצרנו:
-// import { useZeroJankState } from './utils/useZeroJank';
 
-export default function CivicsQuiz() {
-  const [data, setData] = useState(null);
+export default function CivicsQuiz(): React.JSX.Element {
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   
-  // ניהול סטייט עבור התשובות של התלמיד באלגוריתם המרובע
   const [answers, setAnswers] = useState({
     identify: '',
     define: '',
@@ -28,10 +12,10 @@ export default function CivicsQuiz() {
     explain: ''
   });
 
-  const focusRef = useRef(null);
+  const focusRef = useRef<HTMLHeadingElement>(null);
 
-  // 1. משיכת הנתונים מה-Payload החדש
   useEffect(() => {
+    // שים לב: הנתיב הזה מחפש קובץ ב-public/static/payload.json
     fetch('/static/payload.json')
       .then(res => {
         if (!res.ok) throw new Error('שגיאה בטעינת הנתונים');
@@ -47,32 +31,30 @@ export default function CivicsQuiz() {
       });
   }, []);
 
-  // 2. ניהול פוקוס נגיש (ASD Compliance) בעת טעינה
   useEffect(() => {
     if (!loading && focusRef.current) {
       focusRef.current.focus();
     }
   }, [loading]);
 
-  const handleInputChange = (field, value) => {
-    // אידיאלית כאן נשתמש ב-useZeroJankState כדי למנוע קפיצות במסך
-    setAnswers(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: string, value: string) => {
+    setAnswers((prev: any) => ({ ...prev, [field]: value }));
   };
 
   if (loading) return <div className="gov-layout container">טוען נתונים למבחן...</div>;
   if (error) return <div className="gov-layout container gov-error">שגיאה: {error}</div>;
 
-  const currentQuestion = data.squareQuestions[0];
+  const currentQuestion = data?.squareQuestions?.[0];
+
+  if (!currentQuestion) return <div>לא נמצאו שאלות.</div>;
 
   return (
     <div className="quiz-master-container" id="main-container">
       <main className="concept-card">
-        {/* כותרת מונגשת פוקוס */}
         <h2 ref={focusRef} tabIndex={-1} className="title">
           {currentQuestion.topic}
         </h2>
         
-        {/* טקסט השאלה והמקור */}
         <div className="question-content">
           <p><strong>תיאור האירוע:</strong> {currentQuestion.questionText}</p>
           <blockquote className="source-text">
@@ -80,7 +62,6 @@ export default function CivicsQuiz() {
           </blockquote>
         </div>
 
-        {/* מודול 1: אלגוריתם מרובע - ממשק למילוי */}
         <div className="square-algorithm-form">
           <div className="form-group">
             <label htmlFor="identify">1. ציין (זיהוי המושג):</label>
@@ -88,7 +69,7 @@ export default function CivicsQuiz() {
               id="identify"
               type="text" 
               value={answers.identify}
-              onChange={(e) => handleInputChange('identify', e.target.value)}
+              onChange={(e: any) => handleInputChange('identify', e.target.value)}
               placeholder="לדוגמה: חופש הביטוי..."
             />
           </div>
@@ -98,7 +79,7 @@ export default function CivicsQuiz() {
             <textarea 
               id="define"
               value={answers.define}
-              onChange={(e) => handleInputChange('define', e.target.value)}
+              onChange={(e: any) => handleInputChange('define', e.target.value)}
               placeholder="הגדר את המושג שציינת..."
             />
           </div>
@@ -108,7 +89,7 @@ export default function CivicsQuiz() {
             <textarea 
               id="quote"
               value={answers.quote}
-              onChange={(e) => handleInputChange('quote', e.target.value)}
+              onChange={(e: any) => handleInputChange('quote', e.target.value)}
               placeholder="העתק את המשפט המדויק מהטקסט..."
             />
           </div>
@@ -118,15 +99,14 @@ export default function CivicsQuiz() {
             <textarea 
               id="explain"
               value={answers.explain}
-              onChange={(e) => handleInputChange('explain', e.target.value)}
-              placeholder={currentQuestion.algorithm.explain.placeholderTemplate}
+              onChange={(e: any) => handleInputChange('explain', e.target.value)}
+              placeholder={currentQuestion.algorithm?.explain?.placeholderTemplate || "הסבר..."}
             />
           </div>
         </div>
       </main>
 
-      {/* Pinned Feedback לפי ה-Schema (במידה ויש הערה מהמורה) */}
-      {data.teacherFeedback && data.teacherFeedback.map(feedback => (
+      {data.teacherFeedback && data.teacherFeedback.map((feedback: any) => (
         <aside key={feedback.id} className="hint-box is-expanded">
           <strong>הערת מורה:</strong> {feedback.content}
         </aside>

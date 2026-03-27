@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'hono/jsx';
+import { useState, useEffect, useRef } from 'hono/jsx'
+import type { JSX } from 'hono/jsx'
 
 export const CivicsQuiz = () => {
   const [data, setData] = useState<any>(null);
@@ -13,7 +14,7 @@ export const CivicsQuiz = () => {
     explain: ''
   });
 
-  const focusRef = useRef<HTMLHeadingElement>(null);
+  const focusRef = useRef<HTMLHeadingElement | null>(null);
 
   // 1. משיכת הנתונים מה-Payload החדש מתיקיית ה-static!
   useEffect(() => {
