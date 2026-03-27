@@ -1,0 +1,91 @@
+{
+  "squareAlgorithmQuestions": [
+    {
+      "questionId": "sq_001",
+      "topic": "זכויות אדם ואזרח",
+      "status": "active",
+      "source": "בגרות אזרחות, קיץ תשפ״ג",
+      "hasVisualAid": false,
+      "questionText": "תושבי שכונת 'אלון' קיימו הפגנה רועשת מול בית ראש העיר בשעה 02:00. המשטרה פיזרה אותם בטענה של פגיעה בזכות השכנים לשינה.",
+      "squareAlgorithm": {
+        "identify": {
+          "uiType": "autocomplete",
+          "expectedTermId": "freedom_of_speech",
+          "allowFreeText": false
+        },
+        "define": {
+          "uiType": "textarea-validated",
+          "flashcardRef": "fc_001"
+        },
+        "quote": {
+          "uiType": "text-selection-tool",
+          "sourceTextId": "src_sq_001"
+        },
+        "explain": {
+          "uiType": "textarea-template",
+          "placeholderTemplate": "המושג חופש הביטוי בא לידי ביטוי באירוע מכיוון ש[הסבר כאן]. בקטע ניתן לראות זאת במשפט: '[ציטוט]'."
+        }
+      }
+    }
+  ],
+  "flashcards": [
+    {
+      "flashcardId": "fc_001",
+      "conceptName": "חופש הביטוי",
+      "isCoreCurriculum": true,
+      "frontSide": {
+        "displayTitle": "חופש הביטוי",
+        "visualCue": "megaphone_icon",
+        "cognitiveHint": "זכות להשמיע קול"
+      },
+      "backSide": {
+        "exactDefinition": [
+          "זכותו של כל אדם להביע את דעתו.",
+          "ניתן לעשות זאת בכתב, בדיבור או בהפגנה.",
+          "הבעת הדעה נעשית באופן פומבי וגלוי."
+        ],
+        "emphasisKeywords": ["להביע את דעתו", "באופן פומבי"],
+        "hasVisualAid": true,
+        "supervisorPitfallWarning": "שים לב: חופש הביטוי אינו חופש מוחלט - הוא נעצר כשיש פגיעה בשלומו של אדם אחר."
+      }
+    }
+  ],
+  "positionQuestions": [
+    {
+      "positionQuestionId": "pq_001",
+      "dilemmaTopic": "צנזורה ברשתות חברתיות",
+      "structureTemplate": {
+        "step1_claim": { "scaffolding": "אני תומך בהגבלת תכנים פוגעניים כי..." },
+        "step2_transition": {
+          "uiType": "dropdown-selector",
+          "options": ["לעומת זאת", "בניגוד לכך", "מהצד השני"]
+        },
+        "step3_counterClaim": { "scaffolding": "חשוב לזכור שחופש הביטוי מחייב ש..." }
+      },
+      "conceptBank": {
+        "sideA": ["הזכות לכבוד", "הזכות לשם טוב", "שלום הציבור"],
+        "sideB": ["חופש הביטוי", "זכות הציבור לדעת", "עקרון הפלורליזם"]
+      },
+      "uiDirectives": {
+        "layout": "split-screen-table",
+        "visualNeutrality": true
+      }
+    }
+  ],
+  "lmsCommunication": {
+    "microMission": {
+      "missionId": "miss_01",
+      "progressPercentage": 25,
+      "checklistItems": [
+        { "taskType": "read", "targetId": "sq_001", "requirement": "קריאת הטקסט", "isCompleted": true },
+        { "taskType": "identify", "targetId": "sq_001", "requirement": "זיהוי המושג", "isCompleted": false }
+      ]
+    },
+    "pinnedFeedback": {
+      "feedbackId": "f_101",
+      "targetEntityId": "sq_001",
+      "visualStyle": "pinned-note",
+      "content": "זכור: המשטרה פיזרה את ההפגנה בגלל השעה, לא בגלל התוכן."
+    }
+  }
+}
