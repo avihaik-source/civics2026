@@ -2,11 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-<<<<<<< HEAD
   plugins: [react()],
 
-=======
->>>>>>> 0af169d0828c7b003aac2f60fea1b9090bcdee41
   // ── Build output ───────────────────────────────────────────
   build: {
     outDir: 'dist',
@@ -32,13 +29,8 @@ export default defineConfig({
     // ── Code splitting ──────────────────────────────────────
     rollupOptions: {
       input: {
-<<<<<<< HEAD
-        main: 'index.html', 
-      }, // <-- התיקון הקטן היה כאן (הוספת פסיק)
-=======
         main: 'index.html',
       },
->>>>>>> 0af169d0828c7b003aac2f60fea1b9090bcdee41
       output: {
         // Lazy-load heavy data files separately
         manualChunks(id) {
@@ -46,11 +38,8 @@ export default defineConfig({
           if (id.includes('scaffolding'))     return 'chunk-scaffolding'
           if (id.includes('features'))        return 'chunk-features'
           if (id.includes('data.js'))         return 'chunk-data'
-<<<<<<< HEAD
           // הוראה ל-Vite לארוז את ספריות ה-UI של React בנפרד כדי שהאתר יטען מהר
           if (id.includes('node_modules/react')) return 'vendor-react' 
-=======
->>>>>>> 0af169d0828c7b003aac2f60fea1b9090bcdee41
         },
         // Content hash in filenames → perfect cache busting
         entryFileNames:   'assets/[name]-[hash].js',
@@ -73,15 +62,9 @@ export default defineConfig({
     port: 5173,
     open: false,
     // Proxy API calls to local Wrangler during dev
-<<<<<<< HEAD
-  proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:8787', 
-=======
     proxy: {
       '/api': {
         target: 'http://localhost:8788',
->>>>>>> 0af169d0828c7b003aac2f60fea1b9090bcdee41
         changeOrigin: true,
       },
     },
@@ -92,8 +75,4 @@ export default defineConfig({
     port: 4173,
     host: true,
   },
-<<<<<<< HEAD
 })
-=======
-})
->>>>>>> 0af169d0828c7b003aac2f60fea1b9090bcdee41
