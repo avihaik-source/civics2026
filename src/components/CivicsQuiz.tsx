@@ -1,3 +1,4 @@
+/** @jsxImportSource hono/jsx */
 import { useState, useEffect, useRef } from 'hono/jsx'
 import type { JSX } from 'hono/jsx'
 
@@ -5,6 +6,7 @@ export const CivicsQuiz = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // ניהול סטייט עבור התשובות של התלמיד באלגוריתם המרובע
   const [answers, setAnswers] = useState({
@@ -42,6 +44,41 @@ export const CivicsQuiz = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setAnswers(prev => ({ ...prev, [field]: value }));
+  };
+
+  // 3. פונקציית שליחת הדיווח לשרת
+  const submitToTeacher = async () => {
+    setIsSubmitting(true);
+    try {
+      // שימוש בנתיב יחסי - מושלם לאותו שרת (Worker)
+      const response = await fetch('/api/report', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName: "תלמיד אנונימי",
+          timestamp: new Date().toISOString(),
+          answers: answers
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`שגיאת שרת: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log("תשובת השרת:", responseData);
+      
+      alert("הדיווח נשלח בהצלחה!"); 
+      
+      // אופציונלי: איפוס הטופס לאחר שליחה מוצלחת
+      // setAnswers({ identify: '', define: '', quote: '', explain: '' });
+      
+    } catch (error) {
+      console.error("שגיאה בשליחת הדיווח:", error);
+      alert("הייתה בעיה בשליחת הדיווח. אנא נסה שוב.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) return <div className="gov-layout container">טוען נתונים למבחן...</div>;
@@ -106,6 +143,26 @@ export const CivicsQuiz = () => {
               onInput={(e: any) => handleInputChange('explain', e.target.value)}
               placeholder={currentQuestion.algorithm.explain.placeholderTemplate}
             />
+          </div>
+
+          {/* כפתור שליחה */}
+          <div className="submit-section" style={{ marginTop: '20px', textAlign: 'left' }}>
+            <button
+              onClick={submitToTeacher}
+              disabled={isSubmitting}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#005baa',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }}
+            >
+              {isSubmitting ? 'שולח...' : 'שלח דיווח למורה'}
+            </button>
           </div>
         </div>
       </main>
