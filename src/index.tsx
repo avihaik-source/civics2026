@@ -15,7 +15,7 @@ app.get('/', (c) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>אזרחות 2026 | המרכז ללמידה מונגשת</title>
+    <title>) (עדכון)אזרחות 2026 | המרכז ללמידה מונגשת</title>
     <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
