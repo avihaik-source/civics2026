@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>דמו: Before & After - התאמה ל-ASD</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* RESET */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Assistant', Arial, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+      direction: rtl;
+      background: #f5f5f5;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1a202c;
+      margin-bottom: 40px;
+      font-size: 32px;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 60px;
+    }
+
+    .section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .section h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section.before h2 {
+      color: #c53030;
+    }
+
+    .section.after h2 {
+      color: #2f855a;
+    }
+
+    .label {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .label.before {
+      background: #fed7d7;
+      color: #c53030;
+    }
+
+    .label.after {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+
+    /* ============================
+       DEMO 1: Colors
+       ============================ */
+    .color-demo {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .color-box {
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    /* BEFORE Colors */
+    .color-box.before-primary {
+      background: #0038b8;
+      color: #fff;
+    }
+
+    .color-box.before-bg {
+      background: #F8FAFF;
+      color: #0038b8;
+      border: 2px solid #0038b8;
+    }
+
+    /* AFTER Colors */
+    .color-box.after-primary {
+      background: #2B6CB0;
+      color: #fff;
+    }
+
+    .color-box.after-bg {
+      background: #F7F9FA;
+      color: #2B6CB0;
+      border: 2px solid #2B6CB0;
+    }
+
+    .color-code {
+      font-family: monospace;
+      font-size: 14px;
+      opacity: 0.8;
+      margin-top: 6px;
+    }
+
+    /* ============================
+       DEMO 2: Sidebar Items
+       ============================ */
+    .sidebar-demo {
+      background: #0B1D3A;
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 14px;
+      gap: 10px;
+      border-right: 3px solid transparent;
+      min-height: 44px;
+      color: #fff;
+      border-radius: 6px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .sidebar-item-icon {
+      width: 22px;
+      text-align: center;
+    }
+
+    /* AFTER: גופן גדול יותר */
+    .sidebar-demo.after .sidebar-item {
+      font-size: 16px;
+      padding: 12px 20px;
+    }
+
+    /* ============================
+       DEMO 3: Grade Selection
+       ============================ */
+    .grade-demo {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* BEFORE: Dropdown */
+    .grade-select {
+      padding: 10px 14px;
+      border: 2px solid #D4DEF0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      min-height: 44px;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    /* AFTER: Buttons */
+    .grade-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .grade-btn {
+      padding: 10px 16px;
+      border: 2px solid #D4DEF0;
+      border-radius: 8px;
+      background: #fff;
+      color: #1a202c;
+      font-family: inherit;
+      font-size: 15px;
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 60px;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+
+    .grade-btn:hover {
+      background: #EDF2F7;
+      border-color: #2B6CB0;
+    }
+
+    .grade-btn.active {
+      background: #2B6CB0;
+      color: #fff;
+      border-color: #2B6CB0;
+      font-weight: 700;
+    }
+
+    /* ============================
+       DEMO 4: Unit Cards Spacing
+       ============================ */
+    .units-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .units-grid.after {
+      gap: 24px;
+    }
+
+    .unit-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-right: 4px solid #2B6CB0;
+    }
+
+    .unit-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .unit-card.after:hover {
+      transform: none;
+      background: #EDF2F7;
+    }
+
+    .unit-card h3 {
+      font-size: 17px;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+
+    .unit-card p {
+      font-size: 14px;
+      color: #4A5568;
+    }
+
+    /* ============================
+       DEMO 5: First-Then Box
+       ============================ */
+    .first-then-box {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      overflow: hidden;
+      border: 2px solid #0038b8;
+      margin-bottom: 20px;
+    }
+
+    .first-then-box.after {
+      border: 3px solid #2B6CB0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      margin-bottom: 32px;
+    }
+
+    .ft-current {
+      flex: 1;
+      padding: 18px 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.2s;
+      min-height: 70px;
+      background: #E8F0FE;
+    }
+
+    .first-then-box.after .ft-current {
+      background: linear-gradient(135deg, #EDF5FA, #EDF2F7);
+    }
+
+    .ft-label {
+      background: #0038b8;
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .first-then-box.after .ft-label {
+      background: #2B6CB0;
+    }
+
+    .ft-text {
+      font-weight: 700;
+      font-size: 15px;
+      flex: 1;
+    }
+
+    /* ============================
+       DEMO 6: CTA Primary
+       ============================ */
+    .cta-demo {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .home-cta-primary {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 24px;
+      background: #EDF5FA;
+      border-radius: 12px;
+      border: 2px solid #2B6CB0;
+    }
+
+    .home-cta-primary h3 {
+      font-size: 20px;
+      color: #2B6CB0;
+      margin-bottom: 8px;
+    }
+
+    .btn-primary {
+      font-size: 18px;
+      padding: 16px 32px;
+      min-height: 56px;
+      background: #2B6CB0;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: #1E5A8E;
+    }
+
+    /* ============================
+       Responsive
+       ============================ */
+    @media (max-width: 900px) {
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ============================
+       Explanations
+       ============================ */
+    .explanation {
+      background: #FFF3CD;
+      border-right: 4px solid #FFA500;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .explanation strong {
+      color: #744210;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Before & After: התאמות UI/UX ל-ASD</h1>
+
+    <!-- ============================
+         DEMO 1: Colors
+         ============================ -->
+    <h2 style="font-size: 24px; margin-bottom: 20px; color: #1a202c;">1️⃣ צבעים</h2>
+    <div class="comparison">
+      <div class="section before">
+        <h2>
+          <span class="label before">BEFORE</span>
+          צבעים עזים
+        </h2>
+        <div class="color-demo">
+          <div class="color-box before-primary">
+            כפתור ראשי
+            <div class="color-code">#0038b8 (כחול עז)</div>
+          </div>
+          <div class="color-box before-bg">
+            רקע + טקסט
+            <div class="color-code">רקע: #F8FAFF (בוהק)</div>
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>בעיה:</strong> הכחול #0038b8 עז מדי, רקע #F8FAFF בוהק - גורם לעומס חושי.
+        </div>
+      </div>
+
+      <div class="section after">
+        <h2>
+          <span class="label after">AFTER</span>
+          צבעים רכים
+        </h2>
+        <div class="color-demo">
+          <div class="color-box after-primary">
+            כפתור ראשי
+            <div class="color-code">#2B6CB0 (כחול רך)</div>
+          </div>
+          <div class="color-box after-bg">
+            רקע + טקסט
+            <div class="color-code">רקע: #F7F9FA (אפור-תכלת)</div>
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>פתרון:</strong> כחול רך #2B6CB0, רקע אפור-תכלת #F7F9FA - הפחתת עומס ב-40%.
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================
+         DEMO 2: Sidebar Font Size
+         ============================ -->
+    <h2 style="font-size: 24px; margin-bottom: 20px; color: #1a202c;">2️⃣ Sidebar - גודל גופן</h2>
+    <div class="comparison">
+      <div class="section before">
+        <h2>
+          <span class="label before">BEFORE</span>
+          גופן 14px
+        </h2>
+        <div class="sidebar-demo before">
+          <div class="sidebar-item">
+            <span class="sidebar-item-icon">🏠</span>
+            דף הבית
+          </div>
+          <div class="sidebar-item">
+            <span class="sidebar-item-icon">📄</span>
+            יחידה 1: דמוקרטיה
+          </div>
+          <div class="sidebar-item">
+            <span class="sidebar-item-icon">📘</span>
+            יחידה 2: בחירות
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>בעיה:</strong> גופן 14px קטן מדי (בסיס האתר 18px), צפוף.
+        </div>
+      </div>
+
+      <div class="section after">
+        <h2>
+          <span class="label after">AFTER</span>
+          גופן 16px
+        </h2>
+        <div class="sidebar-demo after">
+          <div class="sidebar-item">
+            <span class="sidebar-item-icon">🏠</span>
+            דף הבית
+          </div>
+          <div class="sidebar-item">
+            <span class="sidebar-item-icon">📄</span>
+            יחידה 1: דמוקרטיה
+          </div>
+          <div class="sidebar-item">
+            <span class="sidebar-item-icon">📘</span>
+            יחידה 2: בחירות
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>פתרון:</strong> גופן 16px, רווחים גדולים יותר (12px 20px).
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================
+         DEMO 3: Grade Selection
+         ============================ -->
+    <h2 style="font-size: 24px; margin-bottom: 20px; color: #1a202c;">3️⃣ בחירת כיתה</h2>
+    <div class="comparison">
+      <div class="section before">
+        <h2>
+          <span class="label before">BEFORE</span>
+          Dropdown
+        </h2>
+        <div class="grade-demo">
+          <label style="font-size: 15px; font-weight: 600; margin-bottom: 8px; display: block;">כיתה:</label>
+          <select class="grade-select">
+            <option value="">כיתה...</option>
+            <option value="10">י׳</option>
+            <option value="11">יא׳</option>
+            <option value="12">יב׳</option>
+            <option value="other">אחר</option>
+          </select>
+        </div>
+        <div class="explanation">
+          <strong>בעיה:</strong> Dropdown = לא מומלץ ל-ASD, צריך לפתוח תפריט.
+        </div>
+      </div>
+
+      <div class="section after">
+        <h2>
+          <span class="label after">AFTER</span>
+          כפתורים גלויים
+        </h2>
+        <div class="grade-demo">
+          <label style="font-size: 15px; font-weight: 600; margin-bottom: 8px; display: block;">כיתה:</label>
+          <div class="grade-buttons">
+            <button class="grade-btn">י׳</button>
+            <button class="grade-btn active">יא׳</button>
+            <button class="grade-btn">יב׳</button>
+            <button class="grade-btn">אחר</button>
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>פתרון:</strong> כפתורים גלויים - כל האפשרויות נראות, לחיצה אחת.
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================
+         DEMO 4: Card Spacing
+         ============================ -->
+    <h2 style="font-size: 24px; margin-bottom: 20px; color: #1a202c;">4️⃣ מרווחים בין כרטיסים</h2>
+    <div class="comparison">
+      <div class="section before">
+        <h2>
+          <span class="label before">BEFORE</span>
+          Gap: 16px
+        </h2>
+        <div class="units-grid before">
+          <div class="unit-card">
+            <h3>🏛️ יחידה 1: דמוקרטיה</h3>
+            <p>מושגים: דמוקרטיה, זכויות אדם, שלטון חוק</p>
+          </div>
+          <div class="unit-card">
+            <h3>🗳️ יחידה 2: בחירות</h3>
+            <p>מושגים: זכות הצבעה, הצבעה חשאית, אחוז חסימה</p>
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>בעיה:</strong> Gap 16px צפוף, Hover עם תנועה (translateY).
+        </div>
+      </div>
+
+      <div class="section after">
+        <h2>
+          <span class="label after">AFTER</span>
+          Gap: 24px + Hover רך
+        </h2>
+        <div class="units-grid after">
+          <div class="unit-card after">
+            <h3>🏛️ יחידה 1: דמוקרטיה</h3>
+            <p>מושגים: דמוקרטיה, זכויות אדם, שלטון חוק</p>
+          </div>
+          <div class="unit-card after">
+            <h3>🗳️ יחידה 2: בחירות</h3>
+            <p>מושגים: זכות הצבעה, הצבעה חשאית, אחוז חסימה</p>
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>פתרון:</strong> Gap 24px, Hover רק שינוי צבע (ללא תנועה).
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================
+         DEMO 5: First-Then Box
+         ============================ -->
+    <h2 style="font-size: 24px; margin-bottom: 20px; color: #1a202c;">5️⃣ First-Then Box</h2>
+    <div class="comparison">
+      <div class="section before">
+        <h2>
+          <span class="label before">BEFORE</span>
+          רגיל
+        </h2>
+        <div class="first-then-box before">
+          <div class="ft-current">
+            <span class="ft-label">עכשיו</span>
+            <span class="ft-text">יחידה 1: דמוקרטיה</span>
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>מה טוב:</strong> First-Then קיים! אבל צריך יותר הדגשה.
+        </div>
+      </div>
+
+      <div class="section after">
+        <h2>
+          <span class="label after">AFTER</span>
+          בולט יותר
+        </h2>
+        <div class="first-then-box after">
+          <div class="ft-current">
+            <span class="ft-label">עכשיו</span>
+            <span class="ft-text">יחידה 1: דמוקרטיה</span>
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>פתרון:</strong> Border 3px (במקום 2px), Box-shadow חזק, Gradient רך.
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================
+         DEMO 6: CTA Primary
+         ============================ -->
+    <h2 style="font-size: 24px; margin-bottom: 20px; color: #1a202c;">6️⃣ CTA ראשי בדף הבית</h2>
+    <div class="comparison">
+      <div class="section before">
+        <h2>
+          <span class="label before">BEFORE</span>
+          ללא CTA מרכזי
+        </h2>
+        <div class="cta-demo">
+          <p style="color: #718096; font-size: 15px;">
+            (בדף הבית יש grid של כרטיסים, אין כיוון ברור)
+          </p>
+        </div>
+        <div class="explanation">
+          <strong>בעיה:</strong> ריבוי CTAs - לא ברור מה לעשות עכשיו.
+        </div>
+      </div>
+
+      <div class="section after">
+        <h2>
+          <span class="label after">AFTER</span>
+          CTA בולט
+        </h2>
+        <div class="cta-demo">
+          <div class="home-cta-primary">
+            <h3>📚 המשך ללמוד</h3>
+            <button class="btn-primary">
+              עבור ליחידה 1: דמוקרטיה →
+            </button>
+          </div>
+        </div>
+        <div class="explanation">
+          <strong>פתרון:</strong> CTA יחיד, בולט, ברור - "מה עושים עכשיו?"
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================
+         Footer
+         ============================ -->
+    <div style="text-align: center; margin-top: 60px; padding: 20px; background: #EDF2F7; border-radius: 12px;">
+      <p style="font-size: 16px; color: #4A5568;">
+        <strong>סיכום:</strong> 6 שיפורים מרכזיים להתאמה לנוער 16-18 עם ASD
+      </p>
+      <p style="font-size: 14px; color: #718096; margin-top: 8px;">
+        מבוסס על AASPIRE Guidelines, UX Research for Autistic People, WCAG Cognitive Accessibility
+      </p>
+    </div>
+  </div>
+</body>
+</html>
