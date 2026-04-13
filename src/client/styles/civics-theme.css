@@ -1,0 +1,202 @@
+/* ==========================================================================
+   Civics 2026 - Global Theme & Design System
+   ========================================================================== */
+
+/* --- 1. Design Tokens (משתני בסיס) --- */
+:root {
+  /* Colors - Brand */
+  --gov-blue: #005baa;
+  --gov-blue-hover: #004588;
+  --concept-gold: #f1c40f;
+  --brushed-gold: #b8860b;
+  
+  /* Colors - Status & Feedback */
+  --success-green: #2ecc71;
+  --success-bg: #d1fae5;
+  --warning-amber: #f59e0b;
+  --warning-bg: #fef3c7;
+  --error-red: #e74c3c;
+
+  /* Colors - UI & Backgrounds */
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border-light: #e2e8f0;
+
+  /* Mnemonic (Memory Hints) Specific */
+  --mnemonic-bg: #fef9c3;
+  --mnemonic-border: #fde047;
+
+  /* Typography & Spacing */
+  --font-family: 'Assistant', 'Rubik', system-ui, -apple-system, sans-serif;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.2s;
+}
+
+/* --- 2. CSS Reset & Base (איפוס וקביעת תשתית) --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  direction: rtl; /* תמיכה מובנית בעברית */
+  line-height: 1.6;
+}
+
+/* --- 3. Accessibility (נגישות - קריטי!) --- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* פוקוס ברור למקלדת ללא פגיעה בעיצוב לעכבר */
+:focus-visible {
+  outline: 3px solid var(--concept-gold);
+  outline-offset: 2px;
+}
+
+/* --- 4. Layouts (פריסות מרכזיות) --- */
+.dashboard-container, .dictionary-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.algorithm-grid, .concepts-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .concepts-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+/* --- 5. UI Components (רכיבי ממשק) --- */
+
+/* Cards (למושגים ולבחינות) */
+.concept-card, .card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.concept-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Tables (לדאשבורד מורה) */
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.dash-table th, .dash-table td {
+  padding: 1rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.dash-table th {
+  background-color: var(--gov-blue);
+  color: white;
+  font-weight: 600;
+}
+
+.dash-table tr:hover td {
+  background-color: var(--bg-main);
+}
+
+.high-score { color: var(--success-green); font-weight: bold; }
+.low-score { color: var(--error-red); font-weight: bold; }
+
+/* --- 6. Forms & Inputs (שדות קלט וטפסים) --- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+
+input[type="text"], 
+textarea, 
+.search-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 1rem;
+  transition: border-color var(--transition-speed);
+  resize: vertical; /* מאפשר הגדלת תיבת טקסט רק לגובה */
+}
+
+input[type="text"]:focus, 
+textarea:focus {
+  border-color: var(--gov-blue);
+  outline: none;
+}
+
+/* --- 7. Buttons (כפתורים) --- */
+.btn-primary {
+  background-color: var(--gov-blue);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color var(--transition-speed), opacity var(--transition-speed);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--gov-blue-hover);
+}
+
+.btn-primary:disabled, button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- 8. Animations (אנימציות למניעת קפיצות) --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
