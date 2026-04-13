@@ -1,0 +1,8 @@
+name = "civics2026-platform"
+compatibility_date = "2024-03-01"
+pages_build_output_dir = "dist"
+
+[vars]
+ENVIRONMENT = "production"
+
+# כאן נוסיף בהמשך את החיבורים ל-D1 (מסד הנתונים) ול-KV (זיכרון ה-AI)
